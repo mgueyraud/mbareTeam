@@ -20,4 +20,5 @@ module.exports = {
   },
   tailwind: true,
   postcss: true,
+  serverDependenciesToBundle: "all"
 };

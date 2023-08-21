@@ -2,13 +2,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { type ActionArgs, json, redirect } from "@remix-run/node";
 import { Form, Link, useLoaderData } from "@remix-run/react";
+import { prisma } from "~/utils/db.server";
 
 export async function loader() {
+  const users = await prisma.user.findMany();
+
   //acceder a base datos, validatios,
-  return json([
-    { name: "Javier", age: 25 },
-    { name: "Mario", age: 22 },
-  ]);
+  return json({ users });
 }
 
 export async function action({ request }: ActionArgs) {

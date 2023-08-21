@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  db:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=mbareteam
+    ports:
+      - 3306:3306
