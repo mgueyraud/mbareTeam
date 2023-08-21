@@ -4,7 +4,8 @@
   "scripts": {
     "build": "remix build",
     "dev": "remix dev",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "postinstall": "prisma generate && prisma migrate deploy"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.0.3",
