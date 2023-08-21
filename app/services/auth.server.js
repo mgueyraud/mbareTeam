@@ -22,7 +22,7 @@ export const authenticator = new Authenticator(sessionStorage);
       clientID: "418956511863-sii4c4ufisod8e2ofd96iq4gqv9aomcr.apps.googleusercontent.com",
       clientSecret: "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",
       scope: "",
-      callbackURL: `http://localhost:3000/auth/${SocialsProvider.GOOGLE}/callback`,
+      callbackURL: `/auth/${SocialsProvider.GOOGLE}/callback`,
     },
     handleSocialAuthCallback
   ));
