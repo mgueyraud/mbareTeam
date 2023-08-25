@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^8.0.2",
+    "@playwright/test": "^1.37.1",
     "@remix-run/dev": "^1.19.3",
     "@remix-run/eslint-config": "^1.19.3",
     "@remix-run/serve": "^1.19.3",
