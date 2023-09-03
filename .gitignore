@@ -7,8 +7,12 @@ node_modules
 
 /build/
 /public/build
+api
 /api/index.js
 /api/index.js.map
 
 data.db
 data.db-journal
+/test-results/
+/playwright-report/
+/playwright/.cache/
