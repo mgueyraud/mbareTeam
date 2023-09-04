@@ -16,7 +16,7 @@ model User {
 }
 
 model Permissions{
-  id_Permission String  @id @default(cuid())
-  name_Permission String 
-  type_Permission String 
+  id String  @id @default(cuid())
+  name String 
+  type String 
 }
