@@ -14,3 +14,9 @@ model User {
   name     String
   username String @unique
 }
+
+model Permissions{
+  id String  @id @default(cuid())
+  name String 
+  type String 
+}
