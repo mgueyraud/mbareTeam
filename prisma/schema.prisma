@@ -11,6 +11,64 @@ datasource db {
 }
 
 model User {
-  name     String
-  username String @unique
+  googleId       String         @unique
+  email          String         @unique
+  name           String
+  username       String         @unique
+  description    String
+  contents       Content[]
+  collaborations Collaborator[]
+}
+
+model Collaborator {
+  id           String   @id @default(cuid())
+  userGoogleId String?
+  User         User?    @relation(fields: [userGoogleId], references: [googleId])
+  Content      Content? @relation(fields: [contentId], references: [id])
+  contentId    String?
+  role         Role     @relation(fields: [roleId], references: [id])
+  roleId       String
+}
+
+model Content {
+  id            String         @id @default(cuid())
+  title         String
+  content       String
+  description   String
+  image         String
+  contentType   ContentType    @relation(fields: [contentTypeId], references: [id])
+  collaborators Collaborator[]
+  User          User?          @relation(fields: [userGoogleId], references: [googleId])
+  userGoogleId  String?
+  contentTypeId String
+}
+
+model ContentType {
+  id          String    @id @default(cuid())
+  name        String
+  description String
+  Category    Category? @relation(fields: [categoryId], references: [id])
+  categoryId  String?
+  Content     Content[]
+}
+
+model Category {
+  id               String        @id @default(cuid())
+  name             String
+  type_of_contents ContentType[]
+}
+
+model Role {
+  id           String         @id @default(cuid())
+  name         String
+  permissions  Permissions[]
+  Collaborator Collaborator[]
+}
+
+model Permissions {
+  id     String  @id @default(cuid())
+  name   String
+  type   String
+  Role   Role?   @relation(fields: [roleId], references: [id])
+  roleId String?
 }
