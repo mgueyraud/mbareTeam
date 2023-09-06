@@ -24,7 +24,7 @@ model Collaborator {
   id           String   @id @default(cuid())
   userGoogleId String?
   User         User?    @relation(fields: [userGoogleId], references: [googleId])
-  Content      Content? @relation(fields: [contentId], references: [id])
+  Content      Content? @relation(fields: [contentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   contentId    String?
   role         Role     @relation(fields: [roleId], references: [id])
   roleId       String
@@ -38,9 +38,10 @@ model Content {
   image         String
   contentType   ContentType    @relation(fields: [contentTypeId], references: [id])
   collaborators Collaborator[]
-  User          User?          @relation(fields: [userGoogleId], references: [googleId])
+  User          User?          @relation(fields: [userGoogleId], references: [googleId], onDelete: Cascade, onUpdate: Cascade)
   userGoogleId  String?
   contentTypeId String
+  roles         Role[]
 }
 
 model ContentType {
@@ -63,6 +64,8 @@ model Role {
   name         String
   permissions  Permissions[]
   Collaborator Collaborator[]
+  Content      Content?       @relation(fields: [contentId], references: [id])
+  contentId    String?
 }
 
 model Permissions {
