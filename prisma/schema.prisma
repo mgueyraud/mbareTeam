@@ -14,8 +14,9 @@ model User {
   googleId       String         @unique
   email          String         @unique
   name           String
-  username       String         @unique
-  description    String
+  picture        String
+  username       String?        @unique
+  description    String?
   contents       Content[]
   collaborations Collaborator[]
 }
