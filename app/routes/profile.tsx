@@ -9,11 +9,18 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
 import type { User } from "@prisma/client";
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { json, type ActionArgs, type LoaderArgs } from "@remix-run/node";
-import { Form, useLoaderData, useNavigation } from "@remix-run/react";
+import {
+  Form,
+  useActionData,
+  useLoaderData,
+  useNavigation,
+} from "@remix-run/react";
 import { X } from "lucide-react";
+import { useEffect } from "react";
 import { authenticator } from "~/services/auth.server";
 import { prisma } from "~/utils/db.server";
 
@@ -47,7 +54,10 @@ export async function action({ request }: ActionArgs) {
       });
 
       await authenticator.logout(request, { redirectTo: "/" });
-      return json({});
+      return json({
+        success: true,
+        message: "User deleted succesfully",
+      });
     case "update":
       const username = "" + formData.get("username");
       const description = "" + formData.get("description");
@@ -62,13 +72,39 @@ export async function action({ request }: ActionArgs) {
         },
       });
 
-      return json({});
+      return json({
+        success: true,
+        message: "User data updated succesfully",
+      });
   }
+
+  return json({
+    success: false,
+    message: "Something went wrong",
+  });
 }
 
 export default function Profile() {
   const { username, description } = useLoaderData<typeof loader>();
+  const data = useActionData<typeof action>();
+  const { toast } = useToast();
   const navigation = useNavigation();
+
+  useEffect(() => {
+    if (data && data.success) {
+      toast({
+        title: "Success",
+        description: data.message,
+        variant: "default",
+      });
+    } else if (data && !data.success) {
+      toast({
+        title: "Error",
+        description: data.message,
+        variant: "destructive",
+      });
+    }
+  }, [data, toast]);
 
   const isLoadingUpdate =
     navigation.state !== "idle" &&
