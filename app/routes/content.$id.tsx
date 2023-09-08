@@ -37,7 +37,7 @@ export default function Content() {
       <p className="text-lg font-500 text-gray-500">{content?.description}</p>
 
       <Tabs defaultValue="content" className="w-full mt-7">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-fit grid-cols-3 mb-6">
           <TabsTrigger value="content">Content</TabsTrigger>
           <TabsTrigger value="roles">Roles</TabsTrigger>
           <TabsTrigger value="collaborators">Collaborators</TabsTrigger>

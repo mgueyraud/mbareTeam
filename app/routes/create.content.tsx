@@ -60,7 +60,7 @@ export const loader = async ({ request }: LoaderArgs) => {
   };
 };
 
-export default function CreateProject() {
+export default function CreateContent() {
   const data = useActionData<typeof action>();
   const { toast } = useToast();
 

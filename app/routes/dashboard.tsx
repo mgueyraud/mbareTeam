@@ -41,13 +41,22 @@ const Dashboard = () => {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">Hello {user.username ?? user.name}</h1>
+      <div className="flex justify-between">
+        <h1 className="text-2xl font-bold">
+          Hello {user.username ?? user.name}
+        </h1>
+        <Button asChild>
+          <Link to="/create/content">
+            <FilePlus2 className="text-white" height={20} width={20} />
+          </Link>
+        </Button>
+      </div>
       {contents.length === 0 ? (
         <div className="border border-dashed rounded w-full py-10 flex flex-col items-center mt-8">
           <FilePlus2 className="text-gray-500" height={60} width={60} />
           <h2 className="text-xl font-bold mt-3">No content</h2>
           <Button className="mt-5" asChild>
-            <Link to="/create/project">Create a new content</Link>
+            <Link to="/create/content">Create a new content</Link>
           </Button>
         </div>
       ) : (
