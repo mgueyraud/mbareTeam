@@ -7,15 +7,15 @@ const prisma = new PrismaClient();
 
 async function main(){
     console.time('🧹 Cleaned up the database...')
-	await prisma.user.deleteMany()
+	// await prisma.user.deleteMany()
 	console.timeEnd('🧹 Cleaned up the database...')
 
-    await prisma.user.create({
-        data: {
-            username: 'mario',
-            name: 'mario'
-        }
-    });
+    // await prisma.user.create({
+    //     data: {
+    //         username: 'mario',
+    //         name: 'mario'
+    //     }
+    // });
 
 }
 
@@ -25,6 +25,6 @@ main()
     process.exit(1)
   })
   .finally(async () => {
-    console.log(await prisma.user.findMany())
+    // console.log(await prisma.user.findMany())
     await prisma.$disconnect()
   })
