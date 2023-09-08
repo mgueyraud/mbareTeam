@@ -12,6 +12,7 @@ import {
 import styles from "./globals.css";
 import Header from "./components/Header";
 import { authenticator } from "./services/auth.server";
+import { Toaster } from "@/components/ui/toaster";
 
 export const loader = async ({ request }: ActionArgs) => {
   // authenticator.isAuthenticated function returns the user object if found
@@ -42,6 +43,7 @@ export default function App() {
         <main className="mt-5 max-w-[90rem] mx-auto px-5">
           <Outlet />
         </main>
+        <Toaster />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
