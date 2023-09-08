@@ -34,14 +34,14 @@ model Collaborator {
 model Content {
   id            String         @id @default(cuid())
   title         String
-  content       String
+  content       String?
   description   String
-  image         String
-  contentType   ContentType    @relation(fields: [contentTypeId], references: [id])
+  image         String?
+  contentType   ContentType?   @relation(fields: [contentTypeId], references: [id])
   collaborators Collaborator[]
   User          User?          @relation(fields: [userGoogleId], references: [googleId], onDelete: Cascade, onUpdate: Cascade)
   userGoogleId  String?
-  contentTypeId String
+  contentTypeId String?
   roles         Role[]
 }
 
