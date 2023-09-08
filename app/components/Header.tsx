@@ -22,7 +22,7 @@ export default function Header() {
             to="/dashboard"
             className="text-sm font-medium transition-colors hover:text-primary"
           >
-            <img src="./images/mbareteam.png" className="h-9" alt="..."></img>
+            <img src="/images/mbareteam.png" className="h-9" alt="..."></img>
           </Link>
           {/* <Link
             to="/examples/dashboard"

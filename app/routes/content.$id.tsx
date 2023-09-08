@@ -1,7 +1,8 @@
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { User } from "@prisma/client";
 import { json, type LoaderArgs } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, useNavigate } from "@remix-run/react";
 import { Editor } from "novel";
 import { useState } from "react";
 import { authenticator } from "~/services/auth.server";
@@ -18,13 +19,24 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     },
   });
 
-  return json({ content });
+  const roles = await prisma.role.findMany({
+    where: {
+      contentId:id,
+    },
+  });
+
+  return json({ content, roles });
 };
 
 export default function Content() {
-  const { content } = useLoaderData<typeof loader>();
+  const { content,roles } = useLoaderData<typeof loader>();
   const [htmlContent, setHtmlContent] = useState("");
-
+  const navigate = useNavigate();
+  const id = content?.id as String
+  const navigateToCreateRole = () => {
+    navigate(`/create/role/`+id);
+  }
+  
   const updateContent = (editor) => {
     console.log(editor);
     const content = localStorage.getItem("novel__content");
@@ -54,6 +66,23 @@ export default function Content() {
         </TabsContent>
         <TabsContent value="roles" className="space-y-4">
           <h2 className="text-xl font-bold mt-5">Roles</h2>
+          <div>
+            <ul>
+              {roles.map((roles) => (
+                <li 
+                  key={roles.id}
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ml-3"
+                >
+                  {roles.name}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <Button
+          onClick={navigateToCreateRole}
+          className="mt-4"
+          name="intent"
+        >Agregar rol</Button>
         </TabsContent>
         <TabsContent value="collaborators" className="space-y-4">
           <h2 className="text-xl font-bold mt-5">Collaborators</h2>
