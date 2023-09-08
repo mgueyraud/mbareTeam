@@ -8,7 +8,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { SocialsProvider } from "remix-auth-socials";
-import { Switch } from "@radix-ui/react-switch";
+// import { Switch } from "@radix-ui/react-switch";
 import type { User } from "@prisma/client";
 
 export default function Header() {
@@ -19,12 +19,12 @@ export default function Header() {
       <nav className="max-w-screen-xl w-4/5 pb-2 flex justify-between">
         <div className="flex place-items-center space-x-4 lg:space-x-6">
           <Link
-            to="/examples/dashboard"
+            to="/dashboard"
             className="text-sm font-medium transition-colors hover:text-primary"
           >
             <img src="./images/mbareteam.png" className="h-9" alt="..."></img>
           </Link>
-          <Link
+          {/* <Link
             to="/examples/dashboard"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
           >
@@ -47,7 +47,7 @@ export default function Header() {
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
           >
             Settings
-          </Link>
+          </Link> */}
         </div>
         {!data || !data.user ? (
           <div className="flex place-items-center space-x-4 lg:space-x-6">
@@ -70,9 +70,9 @@ export default function Header() {
               <PopoverContent>
                 <ul className="list-none">
                   <li className="mb-2 text-black transition-all hover:cursor-pointer hover:text-slate-700">
-                    <Link to="/profile">Ver Perfil</Link>
+                    <Link to="/profile">Profile</Link>
                   </li>
-                  <li className="mb-2 text-black transition-all hover:cursor-pointer hover:text-slate-700">
+                  {/* <li className="mb-2 text-black transition-all hover:cursor-pointer hover:text-slate-700">
                     Configuración
                   </li>
                   <li className="mb-2 text-black transition-all hover:cursor-pointer hover:text-slate-700">
@@ -80,7 +80,7 @@ export default function Header() {
                       <span>Modo Oscuro</span>
                       <Switch />
                     </div>
-                  </li>
+                  </li> */}
                   <Separator />
                   <li>
                     <div className="w-100 flex justify-center mt-4">
