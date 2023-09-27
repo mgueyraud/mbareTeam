@@ -63,6 +63,7 @@ model Category {
 model Role {
   id           String         @id @default(cuid())
   name         String
+  description  String
   permissions  Permissions[]
   Collaborator Collaborator[]
   Content      Content?       @relation(fields: [contentId], references: [id])

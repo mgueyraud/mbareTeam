@@ -22,35 +22,37 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   (await authenticator.isAuthenticated(request)) as User;
   const id = params.id as string;
 
-  const content = await prisma.content.findUnique({
+  const role = await prisma.role.findUnique({
     where: {
       id,
     },
   });
   const data = await prisma.permissions.findMany();
 
-  return json({content, data});
+  return json({role, data});
 };
 
 export const action = async ({ request,params }: ActionArgs) => {
   const formData = await request.formData();
   const id = params.id as string;
   const rolName = formData.get("rolname");
+  const contentId = formData.get("contentId");
   const rolDescription = formData.get("rolDescription") as string;
   const permissions = formData.getAll("permissions") as string[];
 
   console.log({permissions, rolName});
 
   if(!rolName || typeof rolName !== 'string' || !permissions || permissions.length === 0) return json({});
-
-  const role = await prisma.role.create({
+  const role = await prisma.role.update({
+    where:{
+      id:id,
+    },
     data:{
       name:rolName,
       description:rolDescription,
       permissions: {
         connect: permissions.map((permission) => ({id:permission}))
       },
-      contentId: id,
     }
   });
   
@@ -59,17 +61,18 @@ export const action = async ({ request,params }: ActionArgs) => {
 
 
 export default function CreateRole() {
-  const { content,data } = useLoaderData<typeof loader>();
+  const { role,data } = useLoaderData<typeof loader>();
   const navigation = useNavigate();
 
   return (
     <div>
       <Form method="POST">
+        <input type="hidden" value={role?.contentId} />
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="rolname">Nombre del rol</Label>
-          <Input id="rolname" name="rolname" required/>
+          <Input id="rolname" name="rolname" defaultValue={role?.name} required/>
           <Label htmlFor="rolDescription">Descripción </Label>
-          <Input id="rolDescription" name="rolDescription" required/>
+          <Input id="rolDescription" name="rolDescription" defaultValue={role?.description} required/>
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5 mt-5">
           <Table>
@@ -95,7 +98,7 @@ export default function CreateRole() {
         <Button
           className="mt-4"
         >
-            Crear
+            Actualizar
         </Button>
       </Form>
     </div>

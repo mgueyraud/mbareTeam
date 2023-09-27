@@ -6,10 +6,10 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 async function main(){
+  
   console.time('🧹 Cleaned up the database...')
   await prisma.user.deleteMany()
 	console.timeEnd('🧹 Cleaned up the database...')
-
   console.time('👤 Creando usuario Lopez...')
   const userJavier = await prisma.user.create({
     data:{
@@ -72,7 +72,7 @@ async function main(){
     //         name: 'mario'
     //     }
     // });
-
+  
 }
 
 main()

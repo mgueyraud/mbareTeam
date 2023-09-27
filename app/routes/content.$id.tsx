@@ -1,12 +1,23 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { User } from "@prisma/client";
-import { json, type LoaderArgs } from "@remix-run/node";
-import { useLoaderData, useNavigate } from "@remix-run/react";
+import { type ActionArgs, json, type LoaderArgs, redirect} from "@remix-run/node";
+import { Form, useLoaderData, useNavigate } from "@remix-run/react";
 import { Editor } from "novel";
 import { useState } from "react";
 import { authenticator } from "~/services/auth.server";
 import { prisma } from "~/utils/db.server";
+
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { ClipboardEdit, Eraser } from "lucide-react";
 
 export const loader = async ({ request, params }: LoaderArgs) => {
   (await authenticator.isAuthenticated(request)) as User;
@@ -26,6 +37,29 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   });
 
   return json({ content, roles });
+};
+
+export const action = async ({ request,params }: ActionArgs) => {
+  const idProyecto = params.id;
+  const formData = await request.formData();
+  const intention = formData.get('intention');
+  const rolId = formData.get('rol');
+  switch (intention) {
+    case "edit":
+      return redirect("/edit/role/"+rolId);
+      break;
+      case "delete":
+        await prisma.role.delete({
+          where:{
+            id:rolId,
+          }
+        });
+      break;
+  
+    default:
+      break;
+  }
+  return null;
 };
 
 export default function Content() {
@@ -61,22 +95,45 @@ export default function Content() {
               defaultValue=""
               onDebouncedUpdate={updateContent}
               debounceDuration={1000}
-            />
+              />
           </div>
         </TabsContent>
         <TabsContent value="roles" className="space-y-4">
           <h2 className="text-xl font-bold mt-5">Roles</h2>
           <div>
-            <ul>
-              {roles.map((roles) => (
-                <li 
-                  key={roles.id}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ml-3"
-                >
-                  {roles.name}
-                </li>
-              ))}
-            </ul>
+            <Form>  
+              <Table>
+                <TableCaption>A list of your recent invoices.</TableCaption>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[100px]">Nombre</TableHead>
+                    <TableHead className="text-left">Descripción</TableHead>
+                    <TableHead className="text-right">Acción</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {roles.map((rol) => (
+                  <TableRow
+                    key={rol.id}
+                  >
+                    <TableCell className="">{rol.name}</TableCell>
+                    <TableCell className="font-medium">{rol.description}</TableCell>
+                    <TableCell className="text-right">
+                      <Form method="post">
+                        <Button className="mr-1" name="intention" value="edit">
+                          <ClipboardEdit />
+                        </Button>
+                        <Button variant="destructive" name="intention" value="delete">
+                          <Eraser />
+                        </Button>
+                        <input type="hidden" name="rol" value={rol.id}/>
+                      </Form>
+                    </TableCell>
+                  </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </Form>
           </div>
           <Button
           onClick={navigateToCreateRole}
