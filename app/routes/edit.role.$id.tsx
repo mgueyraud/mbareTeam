@@ -26,10 +26,13 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     where: {
       id,
     },
+    include: {
+      permissions:true,
+    },
   });
-  const data = await prisma.permissions.findMany();
+  const permisos = await prisma.permissions.findMany();
 
-  return json({role, data});
+  return json({role, permisos});
 };
 
 export const action = async ({ request,params }: ActionArgs) => {
@@ -56,18 +59,19 @@ export const action = async ({ request,params }: ActionArgs) => {
     }
   });
   
-  return redirect("/content/"+id);
+  return redirect("/content/"+contentId);
 };
 
 
 export default function CreateRole() {
-  const { role,data } = useLoaderData<typeof loader>();
+  const { role,permisos } = useLoaderData<typeof loader>();
+  console.log(role);
   const navigation = useNavigate();
 
   return (
     <div>
       <Form method="POST">
-        <input type="hidden" value={role?.contentId} />
+        <input type="hidden" value={role?.contentId as string} />
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="rolname">Nombre del rol</Label>
           <Input id="rolname" name="rolname" defaultValue={role?.name} required/>
@@ -83,12 +87,12 @@ export default function CreateRole() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((data) => (
+              {permisos.map((permiso) => (
               <TableRow
-                key={data.id}
+                key={permiso.id}
               >
-                <TableCell ><Checkbox id={data.id} name="permissions" value={data.id}/></TableCell>
-                <TableCell className="font-medium text-right">{data.name}</TableCell>
+                <TableCell ><Checkbox id={permiso.id} name="permissions" defaultChecked={role?.permissions.filter((p)=> p.id==permiso.id).length>0} value={permiso.id}/></TableCell>
+                <TableCell className="font-medium text-right">{permiso.name}</TableCell>
               </TableRow>
               ))}
             </TableBody>

@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { type ActionArgs, json, type LoaderArgs, redirect } from "@remix-run/node";
-import { Form, useLoaderData, useNavigate } from "@remix-run/react";
+import { Form, useLoaderData } from "@remix-run/react";
 import { authenticator } from "~/services/auth.server";
 import type { User } from "@prisma/client";
 import { prisma } from "~/utils/db.server";
@@ -10,7 +10,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableBody,
-  TableCaption,
   TableCell,
   TableHead,
   TableHeader,
@@ -43,7 +42,7 @@ export const action = async ({ request,params }: ActionArgs) => {
 
   if(!rolName || typeof rolName !== 'string' || !permissions || permissions.length === 0) return json({});
 
-  const role = await prisma.role.create({
+  await prisma.role.create({
     data:{
       name:rolName,
       description:rolDescription,
@@ -59,8 +58,7 @@ export const action = async ({ request,params }: ActionArgs) => {
 
 
 export default function CreateRole() {
-  const { content,data } = useLoaderData<typeof loader>();
-  const navigation = useNavigate();
+  const { data } = useLoaderData<typeof loader>();
 
   return (
     <div>
