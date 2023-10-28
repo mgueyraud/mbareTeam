@@ -31,7 +31,12 @@ export const loader = async ({ request, params }: LoaderArgs) => {
 
   return json({role, data});
 };
-
+/**
+ *
+ *
+ * @param {ActionArgs} { request,params }
+ * @return {*} 
+ */
 export const action = async ({ request,params }: ActionArgs) => {
   const formData = await request.formData();
   const id = params.id as string;
@@ -59,7 +64,12 @@ export const action = async ({ request,params }: ActionArgs) => {
   return redirect("/content/"+id);
 };
 
-
+/**
+ *
+ *
+ * @export
+ * @return {*} 
+ */
 export default function CreateRole() {
   const { role,data } = useLoaderData<typeof loader>();
   const navigation = useNavigate();
