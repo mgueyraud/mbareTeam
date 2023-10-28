@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 
-function DropdownMenu(props) {
+function DropdownMenu(props:any) {
   const [selectedOption, setSelectedOption] = useState('');
 
-  const handleOptionChange = (e) => {
+  const handleOptionChange = (e:any) => {
     const selectedValue = e.target.value;
     setSelectedOption(selectedValue);
     props.onChange(selectedValue); // Llama a la función onChange pasada como prop
@@ -13,13 +13,12 @@ function DropdownMenu(props) {
     <div>
       <label>Selecciona una Categoría:</label>
       <select value={selectedOption} onChange={handleOptionChange}>
-        {props.opciones.map((opcion) => (
+        {props.opciones.map((opcion:any) => (
           <option key={opcion.id} value={opcion.id}>
             {opcion.name}
           </option>
         ))}
       </select>
-      <p>Has seleccionado: {selectedOption}</p>
     </div>
   );
 }

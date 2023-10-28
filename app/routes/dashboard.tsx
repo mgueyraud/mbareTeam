@@ -33,7 +33,6 @@ export const loader = async ({ request }: ActionArgs) => {
   });
 
   const categorias = await prisma.category.findMany( );
-  console.log("categoria: ", categorias);
   return {
     user,
     contents,
@@ -43,22 +42,21 @@ export const loader = async ({ request }: ActionArgs) => {
 
 const Dashboard = () => {
   const { user, contents , categorias } = useLoaderData<typeof loader>();
-  const categoria_select=function(option){
+  const categoria_select=function(option : ActionArgs){
     console.log("opcion: ", option);
   }
   return (
     <div>
       <div className="flex justify-between">
-        <h1 className="text-2xl font-bold">
-          Hello {user.username ?? user.name}
-        </h1>
         <div>
           <DropdownMenu opciones={categorias} onChange={categoria_select}></DropdownMenu>
-            <Button asChild>
-              <Link to="/create/content">
-                <FilePlus2 className="text-white" height={20} width={20} />
-              </Link>
-            </Button>
+        </div>
+        <div>
+          <Button asChild>
+            <Link to="/create/content">
+              <FilePlus2 className="text-white" height={20} width={20} />
+            </Link>
+          </Button>
         </div>
 
       </div>
