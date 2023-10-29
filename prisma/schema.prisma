@@ -77,3 +77,9 @@ model Permissions {
   Role   Role?   @relation(fields: [roleId], references: [id])
   roleId String?
 }
+
+model Permissions{
+  id String  @id @default(cuid())
+  name String 
+  type String 
+}

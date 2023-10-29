@@ -139,6 +139,12 @@ async function main(){
       }
     });
 
+    await prisma.permissions.create({
+      data: {
+        name: 'Crear',
+        type: 'General'
+      }
+  });
 }
 
 
