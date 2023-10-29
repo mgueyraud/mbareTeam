@@ -69,7 +69,6 @@ export const action = async ({ request, params }: ActionArgs) => {
         },
       });
       break;
-x``
     default:
       break;
   }
@@ -85,10 +84,10 @@ export default function Content() {
     navigate(`/create/role/` + id);
   };
   const navigateToAddColaborator = () => {
-    navigate(`/add/colaborator/$` + id);
+    navigate(`/add/colaborator/` + id);
   };
 
-  const updateContent = (editor) => {
+  const updateContent = (editor:any) => {
     console.log(editor);
     const content = localStorage.getItem("novel__content");
     setHtmlContent(JSON.stringify(content));

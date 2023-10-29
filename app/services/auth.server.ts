@@ -2,15 +2,20 @@
 
 import { Authenticator } from "remix-auth";
 import { sessionStorage } from "~/services/session.server";
+<<<<<<< HEAD
 import { GoogleStrategy, SocialsProvider, type GoogleProfile } from "remix-auth-socials";
 import { prisma } from "~/utils/db.server";
+=======
+import { GoogleStrategy, SocialsProvider } from "remix-auth-socials";
+import type { GoogleProfile } from "remix-auth-socials";
+>>>>>>> permisosv2
 
 // Create an instance of the authenticator
 // It will take session storage as an input parameter and creates the user session on successful authentication
 export const authenticator = new Authenticator(sessionStorage);
 
-
 // callback function that will be invoked upon successful authentication from social provider
+<<<<<<< HEAD
   async function handleSocialAuthCallback({ profile }:{ profile: GoogleProfile }) {
     const userExisted = await prisma.user.findUnique({
       where: {
@@ -31,6 +36,13 @@ export const authenticator = new Authenticator(sessionStorage);
     })
 
     return user;
+=======
+  async function handleSocialAuthCallback({ profile }:{profile: GoogleProfile}) {
+    // create user in your db here
+    // profile object contains all the user data like image, displayName, id
+    console.log(profile);
+    return profile;
+>>>>>>> permisosv2
   }
   
   // Configuring Google Strategy

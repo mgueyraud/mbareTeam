@@ -78,6 +78,7 @@ async function main(){
       }
     });
 
+<<<<<<< HEAD
     await prisma.category.create({
       data:{
         name: "Tecnología"
@@ -139,12 +140,18 @@ async function main(){
       }
     });
 
+=======
+>>>>>>> permisosv2
     await prisma.permissions.create({
       data: {
         name: 'Crear',
         type: 'General'
       }
   });
+<<<<<<< HEAD
+=======
+
+>>>>>>> permisosv2
 }
 
 
