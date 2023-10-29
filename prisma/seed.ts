@@ -72,8 +72,75 @@ async function main(){
     //         name: 'mario'
     //     }
     // });
-  
+    await prisma.category.create({
+      data:{
+        name: "Noticias"
+      }
+    });
+
+    await prisma.category.create({
+      data:{
+        name: "Tecnología"
+      }
+    });
+    await prisma.category.create({
+      data:{
+        name: "Deportes"
+      }
+    });
+    await prisma.category.create({
+      data:{
+        name: "Entretenimiento"
+      }
+    });
+    await prisma.category.create({
+      data:{
+        name: "Estilo de Vida"
+      }
+    });
+    await prisma.category.create({
+      data:{
+        name: "Educación"
+      }
+    });
+    await prisma.category.create({
+      data:{
+        name: "Ciencia y Naturaleza"
+      }
+    });
+    await prisma.category.create({
+      data:{
+        name: "Arte y Cultura"
+      }
+    });
+    await prisma.category.create({
+      data:{
+        name: "Negocios y Finanzas"
+      }
+    });
+    await prisma.category.create({
+      data:{
+        name: "Alimentación y Cocina"
+      }
+    });
+    await prisma.category.create({
+      data:{
+        name: "Tendencias"
+      }
+    });
+    await prisma.category.create({
+      data:{
+        name: "Política y Actualidad"
+      }
+    });
+    await prisma.category.create({
+      data:{
+        name: "Humor y Entretenimiento"
+      }
+    });
+
 }
+
 
 main()
   .catch(e => {
