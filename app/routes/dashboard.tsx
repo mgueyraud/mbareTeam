@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-import DropdownMenu from "@/components/ui/dropdownmenu.tsx";
+import DropdownMenu from "@/components/ui/dropdownmenu";
 
 // file: app/routes/dashboard.js
 export const loader = async ({ request }: ActionArgs) => {

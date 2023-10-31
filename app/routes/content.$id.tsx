@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { User } from "@prisma/client";
+import { type User, type Role } from "@prisma/client";
 import {
   type ActionArgs,
   json,
@@ -13,6 +13,7 @@ import { useState } from "react";
 import { authenticator } from "~/services/auth.server";
 import { prisma } from "~/utils/db.server";
 
+
 import {
   Table,
   TableBody,
@@ -24,10 +25,22 @@ import {
 } from "@/components/ui/table";
 import { ClipboardEdit, Eraser } from "lucide-react";
 
+import ComboboxDemo from "../components/autofill.users"
+import ModifyColaborator from "~/components/list.colaborator.content";
+
 export const loader = async ({ request, params }: LoaderArgs) => {
-  (await authenticator.isAuthenticated(request)) as User;
+  const user = (await authenticator.isAuthenticated(request)) as User;
 
   const id = params.id as string;
+
+  const usuarios = await prisma.user.findMany({
+    where: {
+        NOT: {
+            username: user.username,
+        }
+    }
+  });
+  console.log(usuarios);
 
   const content = await prisma.content.findUnique({
     where: {
@@ -51,13 +64,15 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     },
   });
 
-  return json({ content, roles, colaboradores });
+  return json({ content, roles, colaboradores, usuarios });
 };
 
 export const action = async ({ request, params }: ActionArgs) => {
   const formData = await request.formData();
+  const contentId = params.id as string;
   const intention = formData.get("intention");
   const rolId = formData.get("rol");
+  
   switch (intention) {
     case "editRole":
       return redirect("/edit/role/" + rolId);
@@ -69,6 +84,45 @@ export const action = async ({ request, params }: ActionArgs) => {
         },
       });
       break;
+    case "addColaborator":
+      console.log("Haz seleccionado addColaborador");
+      const entries = formData.entries();
+
+      for (const pair of entries) {
+        const [key, value] = pair;
+        console.log(`Clave: ${key}, Valor: ${value}`);
+      }
+      const colaboradorId = formData.get("colaboratorId")?.toString();
+
+      const lector = await prisma.role.findFirst({
+        where: {
+          contentId:contentId,
+          name:"lector",
+        }
+      }) as Role;
+      console.log(lector)
+      if (lector !== null && lector !== undefined) {
+        try {
+          await prisma.collaborator.create({
+            data:{
+              userGoogleId:colaboradorId,
+              contentId:contentId.toString(),
+              roleId:lector.id,
+            }
+          });
+        } catch {
+          return json({ success: false, message: "Something went wrong!" });
+        }
+      }
+
+      break;
+    case "deleteColaborator":
+      const colaborador = formData.get("colaborador");
+      await prisma.collaborator.delete({
+        where: {
+          id:colaborador,
+        }
+      });
     default:
       break;
   }
@@ -76,15 +130,14 @@ export const action = async ({ request, params }: ActionArgs) => {
 };
 
 export default function Content() {
-  const { content, roles, colaboradores } = useLoaderData<typeof loader>();
+  const { content, roles, colaboradores, usuarios } = useLoaderData<typeof loader>();
   const [htmlContent, setHtmlContent] = useState("");
+  const [valueAddColaborator, setValueAddColaborator] = useState("");
   const navigate = useNavigate();
   const id = content?.id as String;
+  let idColaboradorSeleccionado = "";
   const navigateToCreateRole = () => {
     navigate(`/create/role/` + id);
-  };
-  const navigateToAddColaborator = () => {
-    navigate(`/add/colaborator/` + id);
   };
 
   const updateContent = (editor:any) => {
@@ -92,6 +145,18 @@ export default function Content() {
     const content = localStorage.getItem("novel__content");
     setHtmlContent(JSON.stringify(content));
   };
+  const funk = (editor:any) => {
+    console.log("funk");
+  };
+
+  const onCheckBoxChange = (value:any)=>{
+    if(value === valueAddColaborator){
+      setValueAddColaborator("");
+    }else{
+      setValueAddColaborator(value);
+    }
+    console.log("El id del colaborador seleccionado es: "+idColaboradorSeleccionado);
+  }
 
   return (
     <div>
@@ -118,7 +183,7 @@ export default function Content() {
           <h2 className="text-xl font-bold mt-5">Roles</h2>
           <div>
             <Table>
-              <TableCaption>A list of your recent invoices.</TableCaption>
+              <TableCaption>Lista de roles.</TableCaption>
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[100px]">Nombre</TableHead>
@@ -145,7 +210,6 @@ export default function Content() {
                         >
                           <Eraser />
                         </Button>
-                        <input type="hidden" name="rol" value={rol.id} />
                       </Form>
                     </TableCell>
                   </TableRow>
@@ -159,9 +223,17 @@ export default function Content() {
         </TabsContent>
         <TabsContent value="collaborators" className="space-y-4">
           <h2 className="text-xl font-bold mt-5">Colaboradores</h2>
-          <Button onClick={navigateToAddColaborator} className="mt-4" name="intent">
-            Agregar colaborador
-          </Button>
+          <Form method="post">
+            <ComboboxDemo usuarios = {usuarios} onCheckBoxChange={onCheckBoxChange} ></ComboboxDemo>
+            <Button
+              className="mt-4 ml-2" 
+              name="intention"
+              value="addColaborator"
+            >
+              Agregar colaborador
+            </Button>
+            <input type="hidden" name="colaboratorId" value={valueAddColaborator} />
+          </Form>
           <Table>
             <TableCaption>A list of your recent invoices.</TableCaption>
             <TableHeader>
@@ -182,16 +254,7 @@ export default function Content() {
                   </TableCell>
                   <TableCell className="text-right">
                     <Form method="post">
-                      <Button className="mr-1" name="intention" value="edit">
-                        <ClipboardEdit />
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        name="intention"
-                        value="deleteColaborator"
-                      >
-                        <Eraser />
-                      </Button>
+                      <ModifyColaborator colaborador = {colaborador} handleEditSubmit={funk} />
                       <input type="hidden" name="colaborador" value={colaborador.id} />
                     </Form>
                   </TableCell>
