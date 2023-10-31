@@ -52,7 +52,6 @@ export default function ComboboxDemo(props:any) {
                 value={usuario.googleId}
                 onSelect={(currentValue) => {
                     setValue(currentValue === value ? "" : currentValue);
-                    onCheckBoxChange(value);
                     onCheckBoxChange(currentValue);
                     console.log("valor cambiado");
                     setOpen(false)

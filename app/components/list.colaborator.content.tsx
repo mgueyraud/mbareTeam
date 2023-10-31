@@ -15,10 +15,9 @@ export default function ModifyColaborator(props: any) {
   const handleEditSubmit = (e:any) => {
     e.preventDefault();
     console.log("handleEditSubmit");  
-    funk();
     toggleDivs();
   };
-
+  
   return (
     <div>
       {editColaboratorVisibility && (

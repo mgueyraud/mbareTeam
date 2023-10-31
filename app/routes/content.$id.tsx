@@ -13,7 +13,6 @@ import { useState } from "react";
 import { authenticator } from "~/services/auth.server";
 import { prisma } from "~/utils/db.server";
 
-
 import {
   Table,
   TableBody,
@@ -23,9 +22,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ClipboardEdit, Eraser } from "lucide-react";
+import { ClipboardEdit, Eraser, X, Check } from "lucide-react";
 
 import ComboboxDemo from "../components/autofill.users"
+import { Exception } from "@prisma/client/runtime/library";
 import ModifyColaborator from "~/components/list.colaborator.content";
 
 export const loader = async ({ request, params }: LoaderArgs) => {
@@ -97,8 +97,12 @@ export const action = async ({ request, params }: ActionArgs) => {
       const lector = await prisma.role.findFirst({
         where: {
           contentId:contentId,
-          name:"lector",
-        }
+          permissions:{
+            some:{
+              name:"leer",
+            }
+          },
+        },
       }) as Role;
       console.log(lector)
       if (lector !== null && lector !== undefined) {
@@ -110,7 +114,8 @@ export const action = async ({ request, params }: ActionArgs) => {
               roleId:lector.id,
             }
           });
-        } catch {
+        } catch(e: Exception) {
+          alert("hubo un problema:"+e.message);
           return json({ success: false, message: "Something went wrong!" });
         }
       }
@@ -135,7 +140,6 @@ export default function Content() {
   const [valueAddColaborator, setValueAddColaborator] = useState("");
   const navigate = useNavigate();
   const id = content?.id as String;
-  let idColaboradorSeleccionado = "";
   const navigateToCreateRole = () => {
     navigate(`/create/role/` + id);
   };
@@ -145,17 +149,14 @@ export default function Content() {
     const content = localStorage.getItem("novel__content");
     setHtmlContent(JSON.stringify(content));
   };
-  const funk = (editor:any) => {
-    console.log("funk");
+  const handleEditSubmit = (e:any) => {
+    e.preventDefault();
+    toggleDivs();
   };
 
   const onCheckBoxChange = (value:any)=>{
-    if(value === valueAddColaborator){
-      setValueAddColaborator("");
-    }else{
-      setValueAddColaborator(value);
-    }
-    console.log("El id del colaborador seleccionado es: "+idColaboradorSeleccionado);
+    setValueAddColaborator(value === valueAddColaborator ? "" : value);
+    console.log("El id del colaborador seleccionado es: "+valueAddColaborator);
   }
 
   return (
@@ -254,7 +255,7 @@ export default function Content() {
                   </TableCell>
                   <TableCell className="text-right">
                     <Form method="post">
-                      <ModifyColaborator colaborador = {colaborador} handleEditSubmit={funk} />
+                      <ModifyColaborator/>
                       <input type="hidden" name="colaborador" value={colaborador.id} />
                     </Form>
                   </TableCell>
