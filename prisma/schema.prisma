@@ -43,7 +43,7 @@ model Content {
   userGoogleId  String?
   contentTypeId String?
   roles         Role[]
-  status        String         @default("Borrador") // Borrador, En revision, Publicado 
+  status        String         @default("Borrador") // Borrador, En revision, Publicado, Inactivo
   likeCount     Int            @default(0)
 }
 
