@@ -12,12 +12,13 @@ import {
 } from "@/components/ui/card";
 
 import DropdownMenu from "@/components/ui/dropdownmenu";
+import { ESTADO_PUBLICADO } from "~/utils/constants";
 
 // file: app/routes/dashboard.js
 export const loader = async ({ request }: ActionArgs) => {
   const contents = await prisma.content.findMany({
     where: {
-      // status: 'Publicado'
+      status: ESTADO_PUBLICADO,
     },
     select: {
       id: true,
@@ -49,9 +50,6 @@ const Home = () => {
         <div className="border border-dashed rounded w-full py-10 flex flex-col items-center mt-8">
           <FilePlus2 className="text-gray-500" height={60} width={60} />
           <h2 className="text-xl font-bold mt-3">No content</h2>
-          <Button className="mt-5" asChild>
-            <Link to="/create/content">Create a new content</Link>
-          </Button>
         </div>
       ) : (
         <div className="mt-5 flex gap-8 flex-wrap">
