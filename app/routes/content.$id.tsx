@@ -30,7 +30,9 @@ import ModifyColaborator from "~/components/list.colaborator.content";
 
 export const loader = async ({ request, params }: LoaderArgs) => {
   const user = (await authenticator.isAuthenticated(request)) as User;
-
+  if(!user) {
+    return redirect("/");
+  }
   const id = params.id as string;
 
   const usuarios = await prisma.user.findMany({
@@ -60,10 +62,23 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     },
     include: {
       User: true,
-      role: true,
+      role: {
+        include: {
+          permissions: true,
+        }
+      }
     },
   });
-
+  if(content?.userGoogleId !== user.googleId){ //Si no soy el owner, checkear si tengo permisos
+    const colab = colaboradores.find(c => c.userGoogleId === user.googleId);
+    if(!colab){
+      return redirect("/");
+    }
+    const hasPermission = colab.role.permissions.some(p => p.name === 'leer');
+    if(!hasPermission){
+      return redirect("/");
+    }
+  }
   return json({ content, roles, colaboradores, usuarios });
 };
 
