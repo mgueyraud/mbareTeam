@@ -20,12 +20,23 @@ export const loader = async ({ request }: ActionArgs) => {
   // authenticator.isAuthenticated function returns the user object if found
   // if user is not authenticated then user would be redirected back to homepage ("/" route)
   const user = (await authenticator.isAuthenticated(request)) as User;
-  if(!user){
+  if (!user) {
     return redirect("/");
   }
   const contents = await prisma.content.findMany({
     where: {
-      userGoogleId: user.googleId,
+      OR: [
+        {
+          userGoogleId: user.googleId,
+        },
+        {
+          collaborators: {
+            some: {
+              userGoogleId: user.googleId,
+            },
+          },
+        },
+      ],
     },
     select: {
       id: true,
@@ -34,24 +45,27 @@ export const loader = async ({ request }: ActionArgs) => {
     },
   });
 
-  const categorias = await prisma.category.findMany( );
+  const categorias = await prisma.category.findMany();
   return {
     user,
     contents,
-    categorias
+    categorias,
   };
 };
 
 const Dashboard = () => {
-  const { user, contents , categorias } = useLoaderData<typeof loader>();
-  const categoria_select=function(option : ActionArgs){
+  const { user, contents, categorias } = useLoaderData<typeof loader>();
+  const categoria_select = function (option: ActionArgs) {
     console.log("opcion: ", option);
-  }
+  };
   return (
     <div>
       <div className="flex justify-between">
         <div>
-          <DropdownMenu opciones={categorias} onChange={categoria_select}></DropdownMenu>
+          <DropdownMenu
+            opciones={categorias}
+            onChange={categoria_select}
+          ></DropdownMenu>
         </div>
         <div>
           <Button asChild>
@@ -60,7 +74,6 @@ const Dashboard = () => {
             </Link>
           </Button>
         </div>
-
       </div>
       {contents.length === 0 ? (
         <div className="border border-dashed rounded w-full py-10 flex flex-col items-center mt-8">
