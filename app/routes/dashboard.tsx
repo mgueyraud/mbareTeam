@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import type { User } from "@prisma/client";
-import type { ActionArgs } from "@remix-run/node";
+import { redirect, type ActionArgs } from "@remix-run/node";
 import { Link, useLoaderData } from "@remix-run/react";
 import { authenticator } from "~/services/auth.server";
 import { FilePlus2, MoveUpRight } from "lucide-react";
@@ -20,7 +20,9 @@ export const loader = async ({ request }: ActionArgs) => {
   // authenticator.isAuthenticated function returns the user object if found
   // if user is not authenticated then user would be redirected back to homepage ("/" route)
   const user = (await authenticator.isAuthenticated(request)) as User;
-
+  if(!user){
+    return redirect("/");
+  }
   const contents = await prisma.content.findMany({
     where: {
       userGoogleId: user.googleId,
