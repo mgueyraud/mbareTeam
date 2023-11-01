@@ -44,7 +44,7 @@ model Content {
   contentTypeId String?
   roles         Role[]
   status        String         @default("Borrador") // Borrador, En revision, Publicado 
-  likeCount     Int
+  likeCount     Int            @default(0)
 }
 
 model ContentType {
