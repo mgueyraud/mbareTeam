@@ -53,19 +53,18 @@ export const loader = async ({ request }: ActionArgs) => {
   };
 };
 
+
 const Dashboard = () => {
   const { user, contents, categorias } = useLoaderData<typeof loader>();
   const categoria_select = function (option: ActionArgs) {
     console.log("opcion: ", option);
-  };
+    
+  }
   return (
     <div>
       <div className="flex justify-between">
         <div>
-          <DropdownMenu
-            opciones={categorias}
-            onChange={categoria_select}
-          ></DropdownMenu>
+          <DropdownMenu title= "Selecciona una Categoría" opciones={categorias} onChange={categoria_select}></DropdownMenu>
         </div>
         <div>
           <Button asChild>
