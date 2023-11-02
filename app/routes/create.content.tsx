@@ -14,7 +14,18 @@ import { Form, useActionData } from "@remix-run/react";
 import { useEffect } from "react";
 import { authenticator } from "~/services/auth.server";
 import { prisma } from "~/utils/db.server";
+import { Link, useLoaderData } from "@remix-run/react";
+import DropdownMenu from "@/components/ui/dropdownmenu";
 
+
+
+/**
+ *
+ *
+ * @export
+ * @param {ActionArgs} { request }
+ * @return {*} 
+ */
 export async function action({ request }: ActionArgs) {
   const user = (await authenticator.isAuthenticated(request, {
     failureRedirect: "/",
@@ -41,6 +52,7 @@ export async function action({ request }: ActionArgs) {
         title,
         description,
         userGoogleId: user.googleId,
+        
       },
     });
   } catch {
@@ -55,14 +67,38 @@ export const loader = async ({ request }: LoaderArgs) => {
     failureRedirect: "/",
   })) as User;
 
+
+  const categorias = await prisma.category.findMany();
   return {
     user,
+    categorias
   };
+};
+/**
+ *
+ *
+ * @param {string} categoryID
+ */
+async function asignarCat( categoryID: string) {
+  const contentypes = await prisma.contentType.findMany({
+    where: { categoryId: categoryID }
+  });
 };
 
 export default function CreateContent() {
   const data = useActionData<typeof action>();
   const { toast } = useToast();
+  const { user, categorias } = useLoaderData<typeof loader>();
+  const categoria_select = async function (option: ActionArgs) {
+    const categoryID = '' + option;
+    console.log("categoryID: ", categoryID);
+    const contentypes = await asignarCat(categoryID);
+    //const contentypes = await prisma.contentType.findMany({
+    //  where: { categoryId: categoryID }
+   // });
+    console.log("contetype: ", contentypes);
+  }
+
 
   useEffect(() => {
     if (data && data.success) {
@@ -86,6 +122,10 @@ export default function CreateContent() {
         <div className="grid w-full items-center gap-1.5 mt-4">
           <Label htmlFor="title">Title</Label>
           <Input id="title" name="title" />
+        </div>
+        <div className="grid w-full items-center gap-1.5 mt-4">
+          <Label htmlFor="title">Categoría</Label>
+          <DropdownMenu title="" opciones={categorias} onChange={categoria_select} id="categoryId" name="categoryId"></DropdownMenu>
         </div>
         <div className="grid w-full items-center gap-1.5 mt-4">
           <Label htmlFor="description">Description</Label>

@@ -11,7 +11,7 @@ function DropdownMenu(props:any) {
   
   return (
     <div>
-      <label>Selecciona una Categoría:</label>
+      <label>{props.title}</label>
       <select value={selectedOption} onChange={handleOptionChange}>
         {props.opciones.map((opcion:any) => (
           <option key={opcion.id} value={opcion.id}>
