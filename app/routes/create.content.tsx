@@ -11,7 +11,7 @@ import {
   redirect,
 } from "@remix-run/node";
 import { Form, useActionData } from "@remix-run/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { authenticator } from "~/services/auth.server";
 import { prisma } from "~/utils/db.server";
 import { Link, useLoaderData } from "@remix-run/react";
@@ -37,12 +37,13 @@ export async function action({ request }: ActionArgs) {
   const formData = await request.formData();
   const title = formData.get("title");
   const description = formData.get("description");
-
+  const contentTypeId = formData.get("contentTypeId");
   if (
     !title ||
     !description ||
     typeof title !== "string" ||
-    typeof description !== "string"
+    typeof description !== "string" ||
+    typeof contentTypeId !== "string"
   )
     return json({ success: false, message: "You should enter valid data" });
 
@@ -52,7 +53,7 @@ export async function action({ request }: ActionArgs) {
         title,
         description,
         userGoogleId: user.googleId,
-        
+        contentTypeId,
       },
     });
   } catch {
@@ -69,9 +70,11 @@ export const loader = async ({ request }: LoaderArgs) => {
 
 
   const categorias = await prisma.category.findMany();
+  const contentTypes = await prisma.contentType.findMany();
   return {
     user,
-    categorias
+    categorias,
+    subcategorias: contentTypes,
   };
 };
 /**
@@ -88,17 +91,8 @@ async function asignarCat( categoryID: string) {
 export default function CreateContent() {
   const data = useActionData<typeof action>();
   const { toast } = useToast();
-  const { user, categorias } = useLoaderData<typeof loader>();
-  const categoria_select = async function (option: ActionArgs) {
-    const categoryID = '' + option;
-    console.log("categoryID: ", categoryID);
-    const contentypes = await asignarCat(categoryID);
-    //const contentypes = await prisma.contentType.findMany({
-    //  where: { categoryId: categoryID }
-   // });
-    console.log("contetype: ", contentypes);
-  }
-
+  const { user, categorias, subcategorias } = useLoaderData<typeof loader>();
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
   useEffect(() => {
     if (data && data.success) {
@@ -124,8 +118,14 @@ export default function CreateContent() {
           <Input id="title" name="title" />
         </div>
         <div className="grid w-full items-center gap-1.5 mt-4">
-          <Label htmlFor="title">Categoría</Label>
-          <DropdownMenu title="" opciones={categorias} onChange={categoria_select} id="categoryId" name="categoryId"></DropdownMenu>
+          <div>
+            <Label htmlFor="title">Categoría</Label>
+            <DropdownMenu title="" opciones={categorias} onChange={(value: string) => setSelectedCategoryId(value)} id="categoryId" name="categoryId"></DropdownMenu>
+          </div>
+          <div>
+            <Label htmlFor="title">Tipo de contenido</Label>
+            <DropdownMenu title="" opciones={subcategorias.filter(sc => sc.categoryId === selectedCategoryId)} id="contentTypeId" name="contentTypeId"></DropdownMenu>
+          </div>
         </div>
         <div className="grid w-full items-center gap-1.5 mt-4">
           <Label htmlFor="description">Description</Label>
