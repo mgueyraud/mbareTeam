@@ -9,7 +9,6 @@ import { prisma } from "~/utils/db.server";
 // It will take session storage as an input parameter and creates the user session on successful authentication
 export const authenticator = new Authenticator(sessionStorage);
 
-
 // callback function that will be invoked upon successful authentication from social provider
   async function handleSocialAuthCallback({ profile }:{ profile: GoogleProfile }) {
     const userExisted = await prisma.user.findUnique({

@@ -1,12 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { User } from "@prisma/client";
-import { type ActionArgs, json, type LoaderArgs, redirect} from "@remix-run/node";
+import { type User, type Role } from "@prisma/client";
+import {
+  type ActionArgs,
+  json,
+  type LoaderArgs,
+  redirect,
+} from "@remix-run/node";
 import { Form, useLoaderData, useNavigate } from "@remix-run/react";
 import { Editor } from "novel";
 import { useState } from "react";
 import { authenticator } from "~/services/auth.server";
 import { prisma } from "~/utils/db.server";
+
 
 import {
   Table,
@@ -16,13 +22,25 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import { ClipboardEdit, Eraser } from "lucide-react";
 
+import ComboboxDemo from "../components/autofill.users"
+import ModifyColaborator from "~/components/list.colaborator.content";
+
 export const loader = async ({ request, params }: LoaderArgs) => {
-  (await authenticator.isAuthenticated(request)) as User;
+  const user = (await authenticator.isAuthenticated(request)) as User;
 
   const id = params.id as string;
+
+  const usuarios = await prisma.user.findMany({
+    where: {
+        NOT: {
+            username: user.username,
+        }
+    }
+  });
+  console.log(usuarios);
 
   const content = await prisma.content.findUnique({
     where: {
@@ -32,30 +50,79 @@ export const loader = async ({ request, params }: LoaderArgs) => {
 
   const roles = await prisma.role.findMany({
     where: {
-      contentId:id,
+      contentId: id,
     },
   });
 
-  return json({ content, roles });
+  const colaboradores = await prisma.collaborator.findMany({
+    where: {
+      contentId: id,
+    },
+    include: {
+      User: true,
+      role: true,
+    },
+  });
+
+  return json({ content, roles, colaboradores, usuarios });
 };
 
-export const action = async ({ request,params }: ActionArgs) => {
-  const idProyecto = params.id;
+export const action = async ({ request, params }: ActionArgs) => {
   const formData = await request.formData();
-  const intention = formData.get('intention');
-  const rolId = formData.get('rol');
-  switch (intention) {
-    case "edit":
-      return redirect("/edit/role/"+rolId);
-      break;
-      case "delete":
-        await prisma.role.delete({
-          where:{
-            id:rolId,
-          }
-        });
-      break;
+  const contentId = params.id as string;
+  const intention = formData.get("intention");
+  const rolId = formData.get("rol");
   
+  switch (intention) {
+    case "editRole":
+      return redirect("/edit/role/" + rolId);
+      break;
+    case "deleteRole":
+      await prisma.role.delete({
+        where: {
+          id: rolId,
+        },
+      });
+      break;
+    case "addColaborator":
+      console.log("Haz seleccionado addColaborador");
+      const entries = formData.entries();
+
+      for (const pair of entries) {
+        const [key, value] = pair;
+        console.log(`Clave: ${key}, Valor: ${value}`);
+      }
+      const colaboradorId = formData.get("colaboratorId")?.toString();
+
+      const lector = await prisma.role.findFirst({
+        where: {
+          contentId:contentId,
+          name:"lector",
+        }
+      }) as Role;
+      console.log(lector)
+      if (lector !== null && lector !== undefined) {
+        try {
+          await prisma.collaborator.create({
+            data:{
+              userGoogleId:colaboradorId,
+              contentId:contentId.toString(),
+              roleId:lector.id,
+            }
+          });
+        } catch {
+          return json({ success: false, message: "Something went wrong!" });
+        }
+      }
+
+      break;
+    case "deleteColaborator":
+      const colaborador = formData.get("colaborador");
+      await prisma.collaborator.delete({
+        where: {
+          id:colaborador,
+        }
+      });
     default:
       break;
   }
@@ -63,19 +130,33 @@ export const action = async ({ request,params }: ActionArgs) => {
 };
 
 export default function Content() {
-  const { content,roles } = useLoaderData<typeof loader>();
+  const { content, roles, colaboradores, usuarios } = useLoaderData<typeof loader>();
   const [htmlContent, setHtmlContent] = useState("");
+  const [valueAddColaborator, setValueAddColaborator] = useState("");
   const navigate = useNavigate();
-  const id = content?.id as String
+  const id = content?.id as String;
+  let idColaboradorSeleccionado = "";
   const navigateToCreateRole = () => {
-    navigate(`/create/role/`+id);
-  }
-  
-  const updateContent = (editor) => {
+    navigate(`/create/role/` + id);
+  };
+
+  const updateContent = (editor:any) => {
     console.log(editor);
     const content = localStorage.getItem("novel__content");
     setHtmlContent(JSON.stringify(content));
   };
+  const funk = (editor:any) => {
+    console.log("funk");
+  };
+
+  const onCheckBoxChange = (value:any)=>{
+    if(value === valueAddColaborator){
+      setValueAddColaborator("");
+    }else{
+      setValueAddColaborator(value);
+    }
+    console.log("El id del colaborador seleccionado es: "+idColaboradorSeleccionado);
+  }
 
   return (
     <div>
@@ -95,54 +176,92 @@ export default function Content() {
               defaultValue=""
               onDebouncedUpdate={updateContent}
               debounceDuration={1000}
-              />
+            />
           </div>
         </TabsContent>
         <TabsContent value="roles" className="space-y-4">
           <h2 className="text-xl font-bold mt-5">Roles</h2>
           <div>
-            <Form>  
-              <Table>
-                <TableCaption>A list of your recent invoices.</TableCaption>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[100px]">Nombre</TableHead>
-                    <TableHead className="text-left">Descripción</TableHead>
-                    <TableHead className="text-right">Acción</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {roles.map((rol) => (
-                  <TableRow
-                    key={rol.id}
-                  >
+            <Table>
+              <TableCaption>Lista de roles.</TableCaption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[100px]">Nombre</TableHead>
+                  <TableHead className="text-left">Descripción</TableHead>
+                  <TableHead className="text-right">Acción</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {roles.map((rol) => (
+                  <TableRow key={rol.id}>
                     <TableCell className="">{rol.name}</TableCell>
-                    <TableCell className="font-medium">{rol.description}</TableCell>
+                    <TableCell className="font-medium">
+                      {rol.description}
+                    </TableCell>
                     <TableCell className="text-right">
                       <Form method="post">
-                        <Button className="mr-1" name="intention" value="edit">
+                        <Button className="mr-1" name="intention" value="editRole">
                           <ClipboardEdit />
                         </Button>
-                        <Button variant="destructive" name="intention" value="delete">
+                        <Button
+                          variant="destructive"
+                          name="intention"
+                          value="deleteRole"
+                        >
                           <Eraser />
                         </Button>
-                        <input type="hidden" name="rol" value={rol.id}/>
                       </Form>
                     </TableCell>
                   </TableRow>
-                    ))}
-                </TableBody>
-              </Table>
-            </Form>
+                ))}
+              </TableBody>
+            </Table>
           </div>
-          <Button
-          onClick={navigateToCreateRole}
-          className="mt-4"
-          name="intent"
-        >Agregar rol</Button>
+          <Button onClick={navigateToCreateRole} className="mt-4" name="intent">
+            Agregar rol
+          </Button>
         </TabsContent>
         <TabsContent value="collaborators" className="space-y-4">
-          <h2 className="text-xl font-bold mt-5">Collaborators</h2>
+          <h2 className="text-xl font-bold mt-5">Colaboradores</h2>
+          <Form method="post">
+            <ComboboxDemo usuarios = {usuarios} onCheckBoxChange={onCheckBoxChange} ></ComboboxDemo>
+            <Button
+              className="mt-4 ml-2" 
+              name="intention"
+              value="addColaborator"
+            >
+              Agregar colaborador
+            </Button>
+            <input type="hidden" name="colaboratorId" value={valueAddColaborator} />
+          </Form>
+          <Table>
+            <TableCaption>A list of your recent invoices.</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[100px]">Nombre</TableHead>
+                <TableHead className="text-left">Rol</TableHead>
+                <TableHead className="text-right">Acción</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {colaboradores.map((colaborador) => (
+                <TableRow key={colaborador.id}>
+                  <TableCell className="">
+                    {colaborador.User?.username}
+                  </TableCell>
+                  <TableCell className="font-medium">
+                    {colaborador.role.name}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Form method="post">
+                      <ModifyColaborator colaborador = {colaborador} handleEditSubmit={funk} />
+                      <input type="hidden" name="colaborador" value={colaborador.id} />
+                    </Form>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </TabsContent>
       </Tabs>
     </div>
