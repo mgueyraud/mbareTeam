@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge"
 
 import DropdownMenu from "@/components/ui/dropdownmenu";
 
@@ -42,6 +43,7 @@ export const loader = async ({ request }: ActionArgs) => {
       id: true,
       title: true,
       description: true,
+      status: true,
     },
   });
 
@@ -94,9 +96,16 @@ const Dashboard = () => {
           {contents.map((content) => (
             <Link key={content.id} to={`/content/${content.id}`}>
               <Card className="w-[350px]">
-                <CardHeader className="justify-between flex-row">
-                  <CardTitle>{content.title}</CardTitle>
-                  <MoveUpRight width={20} height={20} />
+                <CardHeader className="">
+                  <div className="flex flex-col">
+                    <div className="justify-between flex flex-row">
+                      <CardTitle>{content.title}</CardTitle>
+                      <MoveUpRight width={20} height={20} />
+                    </div>
+                    <div className="mt-2">
+                      <Badge>{content.status}</Badge>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <CardDescription>{content.description}</CardDescription>
