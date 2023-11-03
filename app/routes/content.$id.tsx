@@ -91,7 +91,7 @@ export const action = async ({ request, params }: ActionArgs) => {
   const intent = formData.get("intent");
   const rolId = formData.get("rol");
   const html = formData.get("html");
-
+  console.log(rolId);
   if (html) {
     await prisma.content.update({
       where: {
@@ -137,7 +137,7 @@ export const action = async ({ request, params }: ActionArgs) => {
 
       const colaboradorId = formData.get("colaboratorId")?.toString();
 
-      const lector = (await prisma.role.findFirst({
+      const lector = await prisma.role.findFirst({
         where: {
           contentId: contentId,  // Filtrar por contentId específico
           permissions: {
@@ -148,7 +148,7 @@ export const action = async ({ request, params }: ActionArgs) => {
             }
           }
         }
-      }) as Role;
+      }) as Role
       console.log("este es el rol lector")
       console.log(lector)
       if (lector !== null && lector !== undefined) {
@@ -160,7 +160,7 @@ export const action = async ({ request, params }: ActionArgs) => {
               roleId: lector.id,
             },
           });
-        } catch(e: Exception) {
+        } catch(e: any) {
           alert("hubo un problema:"+e.message);
           return json({ success: false, message: "Something went wrong!" });
         }
@@ -283,6 +283,7 @@ export default function Content() {
                         >
                           <Eraser />
                         </Button>
+                        <input type="hidden" name="rol" value={rol.id}/>
                       </Form>
                     </TableCell>
                   </TableRow>

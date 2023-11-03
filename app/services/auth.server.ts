@@ -24,6 +24,7 @@ export const authenticator = new Authenticator(sessionStorage);
       data: {
         googleId: profile.id,
         name: profile.name.familyName,
+        username: profile.emails[0].value,
         email: profile.emails[0].value,
         picture: profile._json.picture
       }
