@@ -87,7 +87,7 @@ const Dashboard = () => {
       <div className="flex justify-between">
         <div className="flex flex-row gap-3 items-center">
           <DropdownMenu title= "Selecciona una Categoría" opciones={categorias} onChange={categoria_select} name="categoryId"></DropdownMenu>
-          <Input name="name" />
+          <Input name="name" placeholder="Buscar por titulo..." />
           <Button type="submit"><Search></Search></Button>
         </div>
         <div className="flex justify-between gap-3">

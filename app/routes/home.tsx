@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { redirect, type ActionArgs } from "@remix-run/node";
-import { Link, useLoaderData } from "@remix-run/react";
-import { FilePlus2, MoveUpRight } from "lucide-react";
+import { Form, Link, useLoaderData } from "@remix-run/react";
+import { FilePlus2, MoveUpRight, Search } from "lucide-react";
 import { prisma } from "~/utils/db.server";
 import {
   Card,
@@ -13,12 +13,28 @@ import {
 
 import DropdownMenu from "@/components/ui/dropdownmenu";
 import { ESTADO_PUBLICADO } from "~/utils/constants";
+import { Input } from "@/components/ui/input";
 
 // file: app/routes/dashboard.js
 export const loader = async ({ request }: ActionArgs) => {
+  const url = new URL(request.url);
+  const categoryId = url.searchParams.get('categoryId');
+  const name = url.searchParams.get('name');
   const contents = await prisma.content.findMany({
     where: {
-      status: ESTADO_PUBLICADO,
+      AND: [
+        {
+          status: ESTADO_PUBLICADO,
+        },
+        {
+          title: name ? {
+            search: name,
+          } : {},
+          contentType: categoryId ? {
+            categoryId,
+          } : {},
+        }
+      ],
     },
     select: {
       id: true,
@@ -40,10 +56,12 @@ const Home = () => {
     console.log("opcion: ", option);
   }
   return (
-    <div>
+    <Form method="GET">
       <div className="flex justify-between">
-        <div>
-          <DropdownMenu opciones={categorias} onChange={categoria_select}></DropdownMenu>
+        <div className="flex flex-row gap-3 items-center">
+          <DropdownMenu title= "Selecciona una Categoría" opciones={categorias} onChange={categoria_select} name="categoryId"></DropdownMenu>
+          <Input name="name" placeholder="Buscar por titulo..." />
+          <Button type="submit"><Search/></Button>
         </div>
       </div>
       {contents.length === 0 ? (
@@ -66,7 +84,7 @@ const Home = () => {
           ))}
         </div>
       )}
-    </div>
+    </Form>
   );
 };
 
