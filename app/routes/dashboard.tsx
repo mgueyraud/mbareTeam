@@ -15,11 +15,13 @@ import {
 import { Badge } from "@/components/ui/badge"
 
 import DropdownMenu from "@/components/ui/dropdownmenu";
+import { Input } from "@/components/ui/input";
 
 // file: app/routes/dashboard.js
 export const loader = async ({ request }: ActionArgs) => {
   const url = new URL(request.url);
   const categoryId = url.searchParams.get('categoryId');
+  const name = url.searchParams.get('name');
   // authenticator.isAuthenticated function returns the user object if found
   // if user is not authenticated then user would be redirected back to homepage ("/" route)
   const user = (await authenticator.isAuthenticated(request)) as User;
@@ -43,6 +45,9 @@ export const loader = async ({ request }: ActionArgs) => {
           ],
         },
         {
+          title: name ? {
+            search: name,
+          } : {},
           contentType: categoryId ? {
             categoryId,
           } : {},
@@ -82,6 +87,7 @@ const Dashboard = () => {
       <div className="flex justify-between">
         <div className="flex flex-row gap-3 items-center">
           <DropdownMenu title= "Selecciona una Categoría" opciones={categorias} onChange={categoria_select} name="categoryId"></DropdownMenu>
+          <Input name="name" />
           <Button type="submit"><Search></Search></Button>
         </div>
         <div className="flex justify-between gap-3">
