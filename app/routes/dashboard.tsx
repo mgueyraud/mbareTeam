@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge";
 
 import DropdownMenu from "@/components/ui/dropdownmenu";
 import { Input } from "@/components/ui/input";
@@ -20,8 +20,8 @@ import { Input } from "@/components/ui/input";
 // file: app/routes/dashboard.js
 export const loader = async ({ request }: ActionArgs) => {
   const url = new URL(request.url);
-  const categoryId = url.searchParams.get('categoryId');
-  const name = url.searchParams.get('name');
+  const categoryId = url.searchParams.get("categoryId");
+  const name = url.searchParams.get("name");
   // authenticator.isAuthenticated function returns the user object if found
   // if user is not authenticated then user would be redirected back to homepage ("/" route)
   const user = (await authenticator.isAuthenticated(request)) as User;
@@ -31,7 +31,8 @@ export const loader = async ({ request }: ActionArgs) => {
   const contents = await prisma.content.findMany({
     where: {
       AND: [
-        { OR: [
+        {
+          OR: [
             {
               userGoogleId: user.googleId,
             },
@@ -45,14 +46,18 @@ export const loader = async ({ request }: ActionArgs) => {
           ],
         },
         {
-          title: name ? {
-            search: name,
-          } : {},
-          contentType: categoryId ? {
-            categoryId,
-          } : {},
-        }
-      ]
+          title: name
+            ? {
+                search: name,
+              }
+            : {},
+          contentType: categoryId
+            ? {
+                categoryId,
+              }
+            : {},
+        },
+      ],
     },
     select: {
       id: true,
@@ -62,8 +67,8 @@ export const loader = async ({ request }: ActionArgs) => {
       contentType: {
         select: {
           Category: true,
-        }
-      }
+        },
+      },
     },
   });
 
@@ -75,27 +80,30 @@ export const loader = async ({ request }: ActionArgs) => {
   };
 };
 
-
 const Dashboard = () => {
   const { user, contents, categorias } = useLoaderData<typeof loader>();
   const categoria_select = function (option: ActionArgs) {
     console.log("opcion: ", option);
-    
-  }
+  };
   return (
     <Form method="GET">
       <div className="flex justify-between">
         <div className="flex flex-row gap-3 items-center">
-          <DropdownMenu title= "Selecciona una Categoría" opciones={categorias} onChange={categoria_select} name="categoryId"></DropdownMenu>
+          <DropdownMenu
+            title="Selecciona una Categoría"
+            opciones={categorias}
+            onChange={categoria_select}
+            name="categoryId"
+          ></DropdownMenu>
           <Input name="name" placeholder="Buscar por titulo..." />
-          <Button type="submit"><Search></Search></Button>
+          <Button type="submit">
+            <Search></Search>
+          </Button>
         </div>
         <div className="flex justify-between gap-3">
           <div>
             <Button>
-              <Link to="/contenttype/list">
-                Ver tipo de contenido
-              </Link>
+              <Link to="/contenttype/list">Ver tipo de contenido</Link>
             </Button>
           </div>
           <div>
@@ -110,7 +118,7 @@ const Dashboard = () => {
       {contents.length === 0 ? (
         <div className="border border-dashed rounded w-full py-10 flex flex-col items-center mt-8">
           <FilePlus2 className="text-gray-500" height={60} width={60} />
-          <h2 className="text-xl font-bold mt-3">No content</h2>
+          <h2 className="text-xl font-bold mt-3">No content created</h2>
           <Button className="mt-5" asChild>
             <Link to="/create/content">Create a new content</Link>
           </Button>
@@ -130,7 +138,9 @@ const Dashboard = () => {
                       <Badge>{content.status}</Badge>
                     </div>
                     <div>
-                      <Badge variant="outline">{content.contentType.Category.name}</Badge>
+                      <Badge variant="outline">
+                        {content.contentType.Category.name}
+                      </Badge>
                     </div>
                   </div>
                 </CardHeader>
