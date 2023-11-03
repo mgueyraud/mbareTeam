@@ -16,12 +16,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { useState } from "react";
 
 
 export const loader = async ({ request, params }: LoaderArgs) => {
   (await authenticator.isAuthenticated(request)) as User;
   const id = params.id as string;
-
   const role = await prisma.role.findUnique({
     where: {
       id,
@@ -45,24 +45,31 @@ export const action = async ({ request,params }: ActionArgs) => {
   const id = params.id as string;
   const rolName = formData.get("rolname");
   const contentId = formData.get("contentId");
-  const rolDescription = formData.get("rolDescription") as string;
-  const permissions = formData.getAll("permissions") as string[];
-
+  const rolDescription = formData.getAll("rolDescription");
+  const permissions = formData.getAll("permissions") as String[];
+  console.log(permissions);
   console.log({permissions, rolName});
 
-  if(!rolName || typeof rolName !== 'string' || !permissions || permissions.length === 0) return json({});
-  const role = await prisma.role.update({
-    where:{
-      id:id,
-    },
-    data:{
-      name:rolName,
-      description:rolDescription,
-      permissions: {
-        connect: permissions.map((permission) => ({id:permission}))
+  if(!rolName || typeof rolName !== 'string' || !permissions || permissions.length === 0) return json({})
+    const permisosEliminados = await prisma.role.update({
+      where: {
+        id: id,
       },
-    }
-  });
+      data: {
+        permissions: {
+          deleteMany: {},
+        },
+      },
+    });
+
+    const nuevosRolePermissions = permissions.map((permisoId) => ({
+      roleId: permisosEliminados.id,
+      permissionsId: permisoId,
+    }));
+
+    const rolePermissionsCreados = await prisma.rolePermissions.createMany({
+      data: nuevosRolePermissions,
+    });
   
   return redirect("/content/"+contentId);
 };
@@ -73,10 +80,11 @@ export const action = async ({ request,params }: ActionArgs) => {
  * @export
  * @return {*} 
  */
-export default function CreateRole() {
+export default function EditRole() {
   const { role,permisos } = useLoaderData<typeof loader>();
   console.log(role);
   const navigation = useNavigate();
+
 
   return (
     <div>
@@ -101,7 +109,7 @@ export default function CreateRole() {
               <TableRow
                 key={permiso.id}
               >
-                <TableCell ><Checkbox id={permiso.id} name="permissions" defaultChecked={role?.permissions.filter((p)=> p.id==permiso.id).length>0} value={permiso.id}/></TableCell>
+                <TableCell ><Checkbox id={permiso.id} name="permissions" defaultChecked={role != null && role?.permissions.filter((p) => p.permissionsId==permiso.id).length>0} value={permiso.id} /></TableCell>
                 <TableCell className="font-medium text-right">{permiso.name}</TableCell>
               </TableRow>
               ))}

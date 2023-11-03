@@ -41,18 +41,20 @@ export const action = async ({ request,params }: ActionArgs) => {
   console.log({permissions, rolName});
 
   if(!rolName || typeof rolName !== 'string' || !permissions || permissions.length === 0) return json({});
-
-  await prisma.role.create({
+  console.log(permissions);
+  const nuevoRol = await prisma.role.create({
     data:{
       name:rolName,
       description:rolDescription,
-      permissions: {
-        connect: permissions.map((permission) => ({id:permission}))
-      },
       contentId: id,
     }
   });
-  
+  await prisma.rolePermissions.createMany({
+    data: permissions.map((perm) => ({
+      roleId: nuevoRol.id,
+      permissionsId: perm
+    }))
+  });
   return redirect("/content/"+id);
 };
 
@@ -88,7 +90,6 @@ export default function CreateRole() {
               ))}
             </TableBody>
           </Table>
-
         </div>
         <Button
           className="mt-4"
