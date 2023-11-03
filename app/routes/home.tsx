@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { redirect, type ActionArgs, json } from "@remix-run/node";
 import { Form, Link, useLoaderData } from "@remix-run/react";
-import { FilePlus2, MoveUpRight, Search, ThumbsUp } from "lucide-react";
+import { FilePlus2, MoveUpRight, Search, ThumbsDown, ThumbsUp } from "lucide-react";
 import { prisma } from "~/utils/db.server";
 import {
   Card,
@@ -120,7 +120,10 @@ const Home = () => {
                 <CardContent>
                   <div className="flex flex-row justify-between items-center">
                     <CardDescription>{content.description}</CardDescription>
-                    <Button size="sm" variant="outline" type="submit" name="likeCount" value={content.likeCount + 1}><ThumbsUp /></Button>
+                    <div>
+                      <Button size="sm" variant="outline" type="submit" name="likeCount" className="mr-1" value={content.likeCount + 1}><ThumbsUp /></Button>
+                      <Button size="sm" variant="outline" type="submit" name="likeCount" value={content.likeCount - 1}><ThumbsDown /></Button>
+                    </div>
                   </div>
                 </CardContent>
                 <CardFooter>
