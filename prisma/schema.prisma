@@ -34,7 +34,7 @@ model Collaborator {
 model Content {
   id            String         @id @default(cuid())
   title         String
-  content       String?
+  content       String?        @db.Text
   description   String
   image         String?
   contentType   ContentType?   @relation(fields: [contentTypeId], references: [id])

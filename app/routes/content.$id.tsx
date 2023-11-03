@@ -7,7 +7,7 @@ import {
   type LoaderArgs,
   redirect,
 } from "@remix-run/node";
-import { Form, useLoaderData, useNavigate } from "@remix-run/react";
+import { Form, useLoaderData, useNavigate, useSubmit } from "@remix-run/react";
 import { Editor } from "novel";
 import { useState } from "react";
 import { authenticator } from "~/services/auth.server";
@@ -22,25 +22,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ClipboardEdit, Eraser, X, Check } from "lucide-react";
+import { ClipboardEdit, Eraser } from "lucide-react";
 
-import ComboboxDemo from "../components/autofill.users"
+import ComboboxDemo from "../components/autofill.users";
 import { Exception } from "@prisma/client/runtime/library";
 import ModifyColaborator from "~/components/list.colaborator.content";
 
 export const loader = async ({ request, params }: LoaderArgs) => {
   const user = (await authenticator.isAuthenticated(request)) as User;
-  if(!user) {
+  if (!user) {
     return redirect("/");
   }
   const id = params.id as string;
 
   const usuarios = await prisma.user.findMany({
     where: {
-        NOT: {
-            username: user.username,
-        }
-    }
+      NOT: {
+        username: user.username,
+      },
+    },
   });
   console.log(usuarios);
 
@@ -65,17 +65,18 @@ export const loader = async ({ request, params }: LoaderArgs) => {
       role: {
         include: {
           permissions: true,
-        }
-      }
+        },
+      },
     },
   });
-  if(content?.userGoogleId !== user.googleId){ //Si no soy el owner, checkear si tengo permisos
-    const colab = colaboradores.find(c => c.userGoogleId === user.googleId);
-    if(!colab){
+  if (content?.userGoogleId !== user.googleId) {
+    //Si no soy el owner, checkear si tengo permisos
+    const colab = colaboradores.find((c) => c.userGoogleId === user.googleId);
+    if (!colab) {
       return redirect("/");
     }
-    const hasPermission = colab.role.permissions.some(p => p.name === 'leer');
-    if(!hasPermission){
+    const hasPermission = colab.role.permissions.some((p) => p.name === "leer");
+    if (!hasPermission) {
       return redirect("/");
     }
   }
@@ -87,7 +88,21 @@ export const action = async ({ request, params }: ActionArgs) => {
   const contentId = params.id as string;
   const intention = formData.get("intention");
   const rolId = formData.get("rol");
-  
+  const html = formData.get("html");
+
+  if (html) {
+    await prisma.content.update({
+      where: {
+        id: contentId,
+      },
+      data: {
+        content: html,
+      },
+    });
+
+    return json({});
+  }
+
   switch (intention) {
     case "editRole":
       return redirect("/edit/role/" + rolId);
@@ -109,28 +124,28 @@ export const action = async ({ request, params }: ActionArgs) => {
       }
       const colaboradorId = formData.get("colaboratorId")?.toString();
 
-      const lector = await prisma.role.findFirst({
+      const lector = (await prisma.role.findFirst({
         where: {
-          contentId:contentId,
-          permissions:{
-            some:{
-              name:"leer",
-            }
+          contentId: contentId,
+          permissions: {
+            some: {
+              name: "leer",
+            },
           },
         },
-      }) as Role;
-      console.log(lector)
+      })) as Role;
+      console.log(lector);
       if (lector !== null && lector !== undefined) {
         try {
           await prisma.collaborator.create({
-            data:{
-              userGoogleId:colaboradorId,
-              contentId:contentId.toString(),
-              roleId:lector.id,
-            }
+            data: {
+              userGoogleId: colaboradorId,
+              contentId: contentId.toString(),
+              roleId: lector.id,
+            },
           });
-        } catch(e: Exception) {
-          alert("hubo un problema:"+e.message);
+        } catch (e: Exception) {
+          alert("hubo un problema:" + e.message);
           return json({ success: false, message: "Something went wrong!" });
         }
       }
@@ -140,8 +155,8 @@ export const action = async ({ request, params }: ActionArgs) => {
       const colaborador = formData.get("colaborador");
       await prisma.collaborator.delete({
         where: {
-          id:colaborador,
-        }
+          id: colaborador,
+        },
       });
     default:
       break;
@@ -150,7 +165,9 @@ export const action = async ({ request, params }: ActionArgs) => {
 };
 
 export default function Content() {
-  const { content, roles, colaboradores, usuarios } = useLoaderData<typeof loader>();
+  const { content, roles, colaboradores, usuarios } =
+    useLoaderData<typeof loader>();
+  const submit = useSubmit();
   const [htmlContent, setHtmlContent] = useState("");
   const [valueAddColaborator, setValueAddColaborator] = useState("");
   const navigate = useNavigate();
@@ -159,20 +176,25 @@ export default function Content() {
     navigate(`/create/role/` + id);
   };
 
-  const updateContent = (editor:any) => {
-    console.log(editor);
+  const updateContent = (editor: any) => {
     const content = localStorage.getItem("novel__content");
+
     setHtmlContent(JSON.stringify(content));
-  };
-  const handleEditSubmit = (e:any) => {
-    e.preventDefault();
-    toggleDivs();
+
+    submit(
+      {
+        html: JSON.stringify(content),
+      },
+      { method: "POST" }
+    );
   };
 
-  const onCheckBoxChange = (value:any)=>{
+  const onCheckBoxChange = (value: any) => {
     setValueAddColaborator(value === valueAddColaborator ? "" : value);
-    console.log("El id del colaborador seleccionado es: "+valueAddColaborator);
-  }
+    console.log(
+      "El id del colaborador seleccionado es: " + valueAddColaborator
+    );
+  };
 
   return (
     <div>
@@ -189,7 +211,7 @@ export default function Content() {
           <div>
             <input type="hidden" name="content" value={htmlContent} />
             <Editor
-              defaultValue=""
+              defaultValue={content as any}
               onDebouncedUpdate={updateContent}
               debounceDuration={1000}
             />
@@ -216,7 +238,11 @@ export default function Content() {
                     </TableCell>
                     <TableCell className="text-right">
                       <Form method="post">
-                        <Button className="mr-1" name="intention" value="editRole">
+                        <Button
+                          className="mr-1"
+                          name="intention"
+                          value="editRole"
+                        >
                           <ClipboardEdit />
                         </Button>
                         <Button
@@ -240,15 +266,22 @@ export default function Content() {
         <TabsContent value="collaborators" className="space-y-4">
           <h2 className="text-xl font-bold mt-5">Colaboradores</h2>
           <Form method="post">
-            <ComboboxDemo usuarios = {usuarios} onCheckBoxChange={onCheckBoxChange} ></ComboboxDemo>
+            <ComboboxDemo
+              usuarios={usuarios}
+              onCheckBoxChange={onCheckBoxChange}
+            ></ComboboxDemo>
             <Button
-              className="mt-4 ml-2" 
+              className="mt-4 ml-2"
               name="intention"
               value="addColaborator"
             >
               Agregar colaborador
             </Button>
-            <input type="hidden" name="colaboratorId" value={valueAddColaborator} />
+            <input
+              type="hidden"
+              name="colaboratorId"
+              value={valueAddColaborator}
+            />
           </Form>
           <Table>
             <TableCaption>A list of your recent invoices.</TableCaption>
@@ -270,8 +303,12 @@ export default function Content() {
                   </TableCell>
                   <TableCell className="text-right">
                     <Form method="post">
-                      <ModifyColaborator/>
-                      <input type="hidden" name="colaborador" value={colaborador.id} />
+                      <ModifyColaborator />
+                      <input
+                        type="hidden"
+                        name="colaborador"
+                        value={colaborador.id}
+                      />
                     </Form>
                   </TableCell>
                 </TableRow>
