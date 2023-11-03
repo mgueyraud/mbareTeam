@@ -27,6 +27,7 @@ import { ClipboardEdit, Eraser } from "lucide-react";
 import ComboboxDemo from "../components/autofill.users";
 import { Exception } from "@prisma/client/runtime/library";
 import ModifyColaborator from "~/components/list.colaborator.content";
+import { ESTADO_INACTIVO, ESTADO_PUBLICADO } from "~/utils/constants";
 
 export const loader = async ({ request, params }: LoaderArgs) => {
   const user = (await authenticator.isAuthenticated(request)) as User;
@@ -87,6 +88,7 @@ export const action = async ({ request, params }: ActionArgs) => {
   const formData = await request.formData();
   const contentId = params.id as string;
   const intention = formData.get("intention");
+  const intent = formData.get("intent");
   const rolId = formData.get("rol");
   const html = formData.get("html");
 
@@ -103,6 +105,17 @@ export const action = async ({ request, params }: ActionArgs) => {
     return json({});
   }
 
+  if (typeof intent === "string") {
+    const content = await prisma.content.update({
+      where: {
+        id: contentId,
+      },
+      data: {
+        status: intent,
+      },
+    });
+    return redirect("/dashboard");
+  }
   switch (intention) {
     case "editRole":
       return redirect("/edit/role/" + rolId);
@@ -198,9 +211,27 @@ export default function Content() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">{content?.title}</h1>
-      <p className="text-lg font-500 text-gray-500">{content?.description}</p>
-
+      <Form method="POST">
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">{content?.title}</h1>
+            <p className="text-lg font-500 text-gray-500">
+              {content?.description}
+            </p>
+          </div>
+          {/* TODO: Agregar validacion para pasar solo de En Revision */}
+          <div>
+            <Button name="intent" value={ESTADO_PUBLICADO}>
+              Publicar
+            </Button>
+          </div>
+          <div>
+            <Button name="intent" value={ESTADO_INACTIVO}>
+              Inactivar
+            </Button>
+          </div>
+        </div>
+      </Form>
       <Tabs defaultValue="content" className="w-full mt-7">
         <TabsList className="grid w-fit grid-cols-3 mb-6">
           <TabsTrigger value="content">Content</TabsTrigger>
