@@ -194,13 +194,9 @@ export default function Content() {
   };
 
   const updateContent = (editor: any) => {
-    const content = localStorage.getItem("novel__content");
-
-    setHtmlContent(JSON.stringify(content));
-
     submit(
       {
-        html: JSON.stringify(content),
+        html: JSON.stringify(editor.getJSON()),
       },
       { method: "POST" }
     );
@@ -246,9 +242,10 @@ export default function Content() {
           <div>
             <input type="hidden" name="content" value={htmlContent} />
             <Editor
-              defaultValue={content as any}
+              defaultValue={JSON.parse(content?.content as any)}
               onDebouncedUpdate={updateContent}
               debounceDuration={1000}
+              disableLocalStorage
             />
           </div>
         </TabsContent>
