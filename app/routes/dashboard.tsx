@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import type { User } from "@prisma/client";
-import type { ActionArgs } from "@remix-run/node";
-import { Link, useLoaderData } from "@remix-run/react";
+import { redirect, type ActionArgs } from "@remix-run/node";
+import { Form, Link, useLoaderData } from "@remix-run/react";
 import { authenticator } from "~/services/auth.server";
-import { FilePlus2, MoveUpRight } from "lucide-react";
+import { FilePlus2, MoveUpRight, Search } from "lucide-react";
 import { prisma } from "~/utils/db.server";
 import {
   Card,
@@ -12,44 +12,100 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge"
+
+import DropdownMenu from "@/components/ui/dropdownmenu";
+import { Input } from "@/components/ui/input";
 
 // file: app/routes/dashboard.js
 export const loader = async ({ request }: ActionArgs) => {
+  const url = new URL(request.url);
+  const categoryId = url.searchParams.get('categoryId');
+  const name = url.searchParams.get('name');
   // authenticator.isAuthenticated function returns the user object if found
   // if user is not authenticated then user would be redirected back to homepage ("/" route)
   const user = (await authenticator.isAuthenticated(request)) as User;
-
+  if (!user) {
+    return redirect("/");
+  }
   const contents = await prisma.content.findMany({
     where: {
-      userGoogleId: user.googleId,
+      AND: [
+        { OR: [
+            {
+              userGoogleId: user.googleId,
+            },
+            {
+              collaborators: {
+                some: {
+                  userGoogleId: user.googleId,
+                },
+              },
+            },
+          ],
+        },
+        {
+          title: name ? {
+            search: name,
+          } : {},
+          contentType: categoryId ? {
+            categoryId,
+          } : {},
+        }
+      ]
     },
     select: {
       id: true,
       title: true,
       description: true,
+      status: true,
+      contentType: {
+        select: {
+          Category: true,
+        }
+      }
     },
   });
 
+  const categorias = await prisma.category.findMany();
   return {
     user,
     contents,
+    categorias,
   };
 };
 
-const Dashboard = () => {
-  const { user, contents } = useLoaderData<typeof loader>();
 
+const Dashboard = () => {
+  const { user, contents, categorias } = useLoaderData<typeof loader>();
+  const categoria_select = function (option: ActionArgs) {
+    console.log("opcion: ", option);
+    
+  }
   return (
-    <div>
+    <Form method="GET">
       <div className="flex justify-between">
-        <h1 className="text-2xl font-bold">
-          Hello {user.username ?? user.name}
-        </h1>
-        <Button asChild>
-          <Link to="/create/content">
-            <FilePlus2 className="text-white" height={20} width={20} />
-          </Link>
-        </Button>
+        <div className="flex flex-row gap-3 items-center">
+          <DropdownMenu title= "Selecciona una Categoría" opciones={categorias} onChange={categoria_select} name="categoryId"></DropdownMenu>
+          <Input name="name" placeholder="Buscar por titulo..." />
+          <Button type="submit"><Search></Search></Button>
+        </div>
+        <div className="flex justify-between gap-3">
+          <div>
+            <Button>
+              <Link to="/contenttype/list">
+                Ver tipo de contenido
+              </Link>
+            </Button>
+          </div>
+          <div>
+            <Button asChild>
+              <Link to="/create/content">
+                <FilePlus2 className="text-white" height={20} width={20} />
+              </Link>
+            </Button>
+          </div>
+        </div>
       </div>
       {contents.length === 0 ? (
         <div className="border border-dashed rounded w-full py-10 flex flex-col items-center mt-8">
@@ -64,9 +120,19 @@ const Dashboard = () => {
           {contents.map((content) => (
             <Link key={content.id} to={`/content/${content.id}`}>
               <Card className="w-[350px]">
-                <CardHeader className="justify-between flex-row">
-                  <CardTitle>{content.title}</CardTitle>
-                  <MoveUpRight width={20} height={20} />
+                <CardHeader className="">
+                  <div className="flex flex-col">
+                    <div className="justify-between flex flex-row">
+                      <CardTitle>{content.title}</CardTitle>
+                      <MoveUpRight width={20} height={20} />
+                    </div>
+                    <div className="my-2">
+                      <Badge>{content.status}</Badge>
+                    </div>
+                    <div>
+                      <Badge variant="outline">{content.contentType.Category.name}</Badge>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <CardDescription>{content.description}</CardDescription>
@@ -76,7 +142,7 @@ const Dashboard = () => {
           ))}
         </div>
       )}
-    </div>
+    </Form>
   );
 };
 

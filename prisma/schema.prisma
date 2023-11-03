@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
@@ -32,9 +33,10 @@ model Collaborator {
 }
 
 model Content {
+  @@fulltext([title])
   id            String         @id @default(cuid())
   title         String
-  content       String?
+  content       String?        @db.Text
   description   String
   image         String?
   contentType   ContentType?   @relation(fields: [contentTypeId], references: [id])
@@ -43,6 +45,8 @@ model Content {
   userGoogleId  String?
   contentTypeId String?
   roles         Role[]
+  status        String         @default("Borrador") // Borrador, En revision, Publicado, Inactivo
+  likeCount     Int            @default(0)
 }
 
 model ContentType {
@@ -63,6 +67,7 @@ model Category {
 model Role {
   id           String         @id @default(cuid())
   name         String
+  description  String
   permissions  Permissions[]
   Collaborator Collaborator[]
   Content      Content?       @relation(fields: [contentId], references: [id])

@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import DropdownMenu from "@/components/ui/dropdownmenu";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
@@ -10,22 +11,11 @@ import {
   type LoaderArgs,
   redirect,
 } from "@remix-run/node";
-import { Form, useActionData } from "@remix-run/react";
-import { useEffect, useState } from "react";
+import { Form, useActionData, useLoaderData } from "@remix-run/react";
+import { useEffect } from "react";
 import { authenticator } from "~/services/auth.server";
 import { prisma } from "~/utils/db.server";
-import { Link, useLoaderData } from "@remix-run/react";
-import DropdownMenu from "@/components/ui/dropdownmenu";
 
-
-
-/**
- *
- *
- * @export
- * @param {ActionArgs} { request }
- * @return {*} 
- */
 export async function action({ request }: ActionArgs) {
   const user = (await authenticator.isAuthenticated(request, {
     failureRedirect: "/",
@@ -35,64 +25,48 @@ export async function action({ request }: ActionArgs) {
     return json({ success: false, message: "User should be logged in" });
 
   const formData = await request.formData();
-  const title = formData.get("title");
+  const name = formData.get("name");
   const description = formData.get("description");
-  const contentTypeId = formData.get("contentTypeId");
+  const categoryId = formData.get("categoryId");
   if (
-    !title ||
+    !name ||
     !description ||
-    typeof title !== "string" ||
+    typeof name !== "string" ||
     typeof description !== "string" ||
-    typeof contentTypeId !== "string"
+    typeof categoryId !== "string"
   )
     return json({ success: false, message: "You should enter valid data" });
 
   try {
-    await prisma.content.create({
+    await prisma.contentType.create({
       data: {
-        title,
+        name,
         description,
-        userGoogleId: user.googleId,
-        contentTypeId,
+        categoryId,
       },
     });
   } catch {
     return json({ success: false, message: "Something went wrong!" });
   }
 
-  return redirect("/dashboard");
+  return redirect("/contenttype/list");
 }
 
 export const loader = async ({ request }: LoaderArgs) => {
   const user = (await authenticator.isAuthenticated(request, {
     failureRedirect: "/",
   })) as User;
-
-
-  const categorias = await prisma.category.findMany();
-  const contentTypes = await prisma.contentType.findMany();
+  const categorias = await prisma.category.findMany({});
   return {
     user,
     categorias,
-    subcategorias: contentTypes,
   };
 };
-/**
- *
- *
- * @param {string} categoryID
- */
-async function asignarCat( categoryID: string) {
-  const contentypes = await prisma.contentType.findMany({
-    where: { categoryId: categoryID }
-  });
-};
 
-export default function CreateContent() {
+export default function CreateContentType() {
   const data = useActionData<typeof action>();
+  const { categorias } = useLoaderData(); 
   const { toast } = useToast();
-  const { user, categorias, subcategorias } = useLoaderData<typeof loader>();
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
   useEffect(() => {
     if (data && data.success) {
@@ -111,26 +85,20 @@ export default function CreateContent() {
   }, [data, toast]);
   return (
     <div>
-      <h1 className="text-2xl font-bold">Create new content</h1>
+      <h1 className="text-2xl font-bold">Crear tipo de contenido</h1>
       <Form method="POST">
         <div className="grid w-full items-center gap-1.5 mt-4">
-          <Label htmlFor="title">Title</Label>
-          <Input id="title" name="title" />
-        </div>
-        <div className="grid w-full items-center gap-1.5 mt-4">
-          <div>
-            <Label htmlFor="title">Categoría</Label>
-            <DropdownMenu title="" opciones={categorias} onChange={(value: string) => setSelectedCategoryId(value)} id="categoryId" name="categoryId"></DropdownMenu>
-          </div>
-          <div>
-            <Label htmlFor="title">Tipo de contenido</Label>
-            <DropdownMenu title="" opciones={subcategorias.filter(sc => sc.categoryId === selectedCategoryId)} id="contentTypeId" name="contentTypeId"></DropdownMenu>
-          </div>
+          <Label htmlFor="name">Name</Label>
+          <Input id="name" name="name" />
         </div>
         <div className="grid w-full items-center gap-1.5 mt-4">
           <Label htmlFor="description">Description</Label>
           <Textarea id="description" name="description" />
         </div>
+        <div className="grid w-full items-center gap-1.5 mt-4">
+            <Label htmlFor="categoryId">Categoría</Label>
+            <DropdownMenu title="" opciones={categorias} id="categoryId" name="categoryId"></DropdownMenu>
+          </div>
         <Button className="mt-3">Create</Button>
       </Form>
     </div>
