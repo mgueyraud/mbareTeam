@@ -91,15 +91,19 @@ export const action = async ({ request, params }: ActionArgs) => {
   const rolId = formData.get("rol");
 
   if(typeof intent === "string"){
-    const content = await prisma.content.update({
-      where: {
-        id: contentId,
-      },
-      data: {
-        status: intent
-      },
-    });
-    return redirect("/dashboard");
+    try {
+      const content = await prisma.content.update({
+        where: {
+          id: contentId,
+        },
+        data: {
+          status: intent
+        },
+      });
+      return redirect("/dashboard");
+    } catch {
+      return json({ success: false, message: "Something went wrong!" });
+    }
   }
   switch (intention) {
     case "editRole":
