@@ -28,6 +28,7 @@ import ComboboxDemo from "../components/autofill.users";
 import { Exception } from "@prisma/client/runtime/library";
 import ModifyColaborator from "~/components/list.colaborator.content";
 import { ESTADO_INACTIVO, ESTADO_PUBLICADO } from "~/utils/constants";
+import ComboBoxRoles from "~/components/autofill.roles";
 
 export const loader = async ({ request, params }: LoaderArgs) => {
   const user = (await authenticator.isAuthenticated(request)) as User;
@@ -134,19 +135,13 @@ export const action = async ({ request, params }: ActionArgs) => {
     case "addColaborator":
       console.log("Haz seleccionado addColaborador");
       const entries = formData.entries();
-
+      const roleColaboradorId = formData.get("colaboratorRoleId")
       const colaboradorId = formData.get("colaboratorId")?.toString();
 
-      const lector = await prisma.role.findFirst({
+      const lector = await prisma.role.findUnique({
         where: {
+          id:roleColaboradorId?.toString(),
           contentId: contentId,  // Filtrar por contentId específico
-          permissions: {
-            some: {
-              Permissions: {
-                type: 'leer'  // Buscar permisos de tipo "leer"
-              }
-            }
-          }
         }
       }) as Role
       console.log("este es el rol lector")
@@ -186,6 +181,8 @@ export default function Content() {
   const submit = useSubmit();
   const [htmlContent, setHtmlContent] = useState("");
   const [valueAddColaborator, setValueAddColaborator] = useState("");
+  const [roleAddColaborator, setRoleAddColaborator] = useState("");
+
   const navigate = useNavigate();
   const id = content?.id as String;
   const navigateToCreateRole = () => {
@@ -201,10 +198,17 @@ export default function Content() {
     );
   };
 
-  const onCheckBoxChange = (value: any) => {
+  const userCheckHandler = (value: any) => {
     setValueAddColaborator(value === valueAddColaborator ? "" : value);
     console.log(
       "El id del colaborador seleccionado es: " + valueAddColaborator
+    );
+  };
+
+  const roleCheckHandler = (value: any) => {
+    setRoleAddColaborator(value === roleAddColaborator ? "" : value);
+    console.log(
+      "El id del rol seleccionado es: " + roleAddColaborator
     );
   };
 
@@ -298,7 +302,8 @@ export default function Content() {
         <TabsContent value="collaborators" className="space-y-4">
           <h2 className="text-xl font-bold mt-5">Colaboradores</h2>
           <Form method="post">
-            <ComboboxDemo usuarios = {usuarios} onCheckBoxChange={onCheckBoxChange} ></ComboboxDemo>
+            <ComboboxDemo className="mr-2" usuarios = {usuarios} onCheckBoxChange={userCheckHandler} ></ComboboxDemo>
+            <ComboBoxRoles roles = {roles} onCheckBoxChange={roleCheckHandler} ></ComboBoxRoles>
             <Button
               className="mt-4 ml-2"
               name="intention"
@@ -310,6 +315,11 @@ export default function Content() {
               type="hidden"
               name="colaboratorId"
               value={valueAddColaborator}
+            />
+            <input
+              type="hidden"
+              name="colaboratorRoleId"
+              value={roleAddColaborator}
             />
           </Form>
           <Table>
