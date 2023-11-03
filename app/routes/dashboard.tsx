@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import type { User } from "@prisma/client";
 import { redirect, type ActionArgs } from "@remix-run/node";
-import { Link, useLoaderData } from "@remix-run/react";
+import { Form, Link, useLoaderData } from "@remix-run/react";
 import { authenticator } from "~/services/auth.server";
-import { FilePlus2, MoveUpRight } from "lucide-react";
+import { FilePlus2, MoveUpRight, Search } from "lucide-react";
 import { prisma } from "~/utils/db.server";
 import {
   Card,
@@ -18,6 +18,8 @@ import DropdownMenu from "@/components/ui/dropdownmenu";
 
 // file: app/routes/dashboard.js
 export const loader = async ({ request }: ActionArgs) => {
+  const url = new URL(request.url);
+  const categoryId = url.searchParams.get('categoryId');
   // authenticator.isAuthenticated function returns the user object if found
   // if user is not authenticated then user would be redirected back to homepage ("/" route)
   const user = (await authenticator.isAuthenticated(request)) as User;
@@ -26,24 +28,37 @@ export const loader = async ({ request }: ActionArgs) => {
   }
   const contents = await prisma.content.findMany({
     where: {
-      OR: [
-        {
-          userGoogleId: user.googleId,
-        },
-        {
-          collaborators: {
-            some: {
+      AND: [
+        { OR: [
+            {
               userGoogleId: user.googleId,
             },
-          },
+            {
+              collaborators: {
+                some: {
+                  userGoogleId: user.googleId,
+                },
+              },
+            },
+          ],
         },
-      ],
+        {
+          contentType: categoryId ? {
+            categoryId,
+          } : {},
+        }
+      ]
     },
     select: {
       id: true,
       title: true,
       description: true,
       status: true,
+      contentType: {
+        select: {
+          Category: true,
+        }
+      }
     },
   });
 
@@ -63,24 +78,27 @@ const Dashboard = () => {
     
   }
   return (
-    <div>
+    <Form method="GET">
       <div className="flex justify-between">
-        <div>
-          <DropdownMenu title= "Selecciona una Categoría" opciones={categorias} onChange={categoria_select}></DropdownMenu>
+        <div className="flex flex-row gap-3 items-center">
+          <DropdownMenu title= "Selecciona una Categoría" opciones={categorias} onChange={categoria_select} name="categoryId"></DropdownMenu>
+          <Button type="submit"><Search></Search></Button>
         </div>
-        <div>
-          <Button>
-            <Link to="/contenttype/list">
-              Ver tipo de contenido
-            </Link>
-          </Button>
-        </div>
-        <div>
-          <Button asChild>
-            <Link to="/create/content">
-              <FilePlus2 className="text-white" height={20} width={20} />
-            </Link>
-          </Button>
+        <div className="flex justify-between gap-3">
+          <div>
+            <Button>
+              <Link to="/contenttype/list">
+                Ver tipo de contenido
+              </Link>
+            </Button>
+          </div>
+          <div>
+            <Button asChild>
+              <Link to="/create/content">
+                <FilePlus2 className="text-white" height={20} width={20} />
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
       {contents.length === 0 ? (
@@ -102,8 +120,11 @@ const Dashboard = () => {
                       <CardTitle>{content.title}</CardTitle>
                       <MoveUpRight width={20} height={20} />
                     </div>
-                    <div className="mt-2">
+                    <div className="my-2">
                       <Badge>{content.status}</Badge>
+                    </div>
+                    <div>
+                      <Badge variant="outline">{content.contentType.Category.name}</Badge>
                     </div>
                   </div>
                 </CardHeader>
@@ -115,7 +136,7 @@ const Dashboard = () => {
           ))}
         </div>
       )}
-    </div>
+    </Form>
   );
 };
 
