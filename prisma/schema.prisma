@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
@@ -33,9 +34,10 @@ model Collaborator {
 }
 
 model Content {
+  @@fulltext([title])
   id            String         @id @default(cuid())
   title         String
-  content       String?
+  content       String?        @db.Text
   description   String
   image         String?
   userGoogleId  String?

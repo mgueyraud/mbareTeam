@@ -7,7 +7,7 @@ import {
   type LoaderArgs,
   redirect,
 } from "@remix-run/node";
-import { Form, useLoaderData, useNavigate } from "@remix-run/react";
+import { Form, useLoaderData, useNavigate, useSubmit } from "@remix-run/react";
 import { Editor } from "novel";
 import { useState } from "react";
 import { authenticator } from "~/services/auth.server";
@@ -22,10 +22,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ClipboardEdit, Eraser, X, Check } from "lucide-react";
+import { ClipboardEdit, Eraser } from "lucide-react";
 
-import ComboboxDemo from "../components/autofill.users"
+import ComboboxDemo from "../components/autofill.users";
+import { Exception } from "@prisma/client/runtime/library";
 import ModifyColaborator from "~/components/list.colaborator.content";
+import { ESTADO_INACTIVO, ESTADO_PUBLICADO } from "~/utils/constants";
 
 export const loader = async ({ request, params }: LoaderArgs) => {
   const user = (await authenticator.isAuthenticated(request)) as User;
@@ -38,8 +40,8 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     where: {
       NOT: {
         username: user.username,
-      }
-    }
+      },
+    },
   });
   console.log(usuarios);
 
@@ -64,16 +66,17 @@ export const loader = async ({ request, params }: LoaderArgs) => {
       role: {
         include: {
           permissions: true,
-        }
-      }
+        },
+      },
     },
   });
-  if (content?.userGoogleId !== user.googleId) { //Si no soy el owner, checkear si tengo permisos
-    const colab = colaboradores.find(c => c.userGoogleId === user.googleId);
+  if (content?.userGoogleId !== user.googleId) {
+    //Si no soy el owner, checkear si tengo permisos
+    const colab = colaboradores.find((c) => c.userGoogleId === user.googleId);
     if (!colab) {
       return redirect("/");
     }
-    const hasPermission = colab.role.permissions.some(p => p.name === 'leer');
+    const hasPermission = colab.role.permissions.some((p) => p.name === "leer");
     if (!hasPermission) {
       return redirect("/");
     }
@@ -85,8 +88,38 @@ export const action = async ({ request, params }: ActionArgs) => {
   const formData = await request.formData();
   const contentId = params.id as string;
   const intention = formData.get("intention");
+  const intent = formData.get("intent");
   const rolId = formData.get("rol");
+  const html = formData.get("html");
 
+  if (html) {
+    await prisma.content.update({
+      where: {
+        id: contentId,
+      },
+      data: {
+        content: html,
+      },
+    });
+
+    return json({});
+  }
+
+  if (typeof intent === "string") {
+    try {
+      const content = await prisma.content.update({
+        where: {
+          id: contentId,
+        },
+        data: {
+          status: intent,
+        },
+      });
+      return redirect("/dashboard");
+    } catch {
+      return json({ success: false, message: "Something went wrong!" });
+    }
+  }
   switch (intention) {
     case "editRole":
       return redirect("/edit/role/" + rolId);
@@ -104,7 +137,7 @@ export const action = async ({ request, params }: ActionArgs) => {
 
       const colaboradorId = formData.get("colaboratorId")?.toString();
 
-      const lector = await prisma.role.findFirst({
+      const lector = (await prisma.role.findFirst({
         where: {
           contentId: contentId,  // Filtrar por contentId específico
           permissions: {
@@ -125,10 +158,10 @@ export const action = async ({ request, params }: ActionArgs) => {
               userGoogleId: colaboradorId,
               contentId: contentId.toString(),
               roleId: lector.id,
-            }
+            },
           });
-        } catch (e: any) {
-          alert("hubo un problema:" + e.message);
+        } catch(e: Exception) {
+          alert("hubo un problema:"+e.message);
           return json({ success: false, message: "Something went wrong!" });
         }
       }
@@ -138,7 +171,7 @@ export const action = async ({ request, params }: ActionArgs) => {
       const colaborador = formData.get("colaborador");
       await prisma.collaborator.delete({
         where: {
-          id: colaborador?.toString(),
+          id:colaborador,
         }
       });
     default:
@@ -148,7 +181,9 @@ export const action = async ({ request, params }: ActionArgs) => {
 };
 
 export default function Content() {
-  const { content, roles, colaboradores, usuarios } = useLoaderData<typeof loader>();
+  const { content, roles, colaboradores, usuarios } =
+    useLoaderData<typeof loader>();
+  const submit = useSubmit();
   const [htmlContent, setHtmlContent] = useState("");
   const [valueAddColaborator, setValueAddColaborator] = useState("");
   const navigate = useNavigate();
@@ -158,25 +193,44 @@ export default function Content() {
   };
 
   const updateContent = (editor: any) => {
-    console.log(editor);
-    const content = localStorage.getItem("novel__content");
-    setHtmlContent(JSON.stringify(content));
-  };
-  const handleEditSubmit = (e: any) => {
-    e.preventDefault();
-    toggleDivs();
+    submit(
+      {
+        html: JSON.stringify(editor.getJSON()),
+      },
+      { method: "POST" }
+    );
   };
 
   const onCheckBoxChange = (value: any) => {
     setValueAddColaborator(value === valueAddColaborator ? "" : value);
-    console.log("El id del colaborador seleccionado es: " + valueAddColaborator);
-  }
+    console.log(
+      "El id del colaborador seleccionado es: " + valueAddColaborator
+    );
+  };
 
   return (
     <div>
-      <h1 className="text-2xl font-bold">{content?.title}</h1>
-      <p className="text-lg font-500 text-gray-500">{content?.description}</p>
-
+      <Form method="POST">
+        <div className="flex items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">{content?.title}</h1>
+            <p className="text-lg font-500 text-gray-500">
+              {content?.description}
+            </p>
+          </div>
+          {/* TODO: Agregar validacion para pasar solo de En Revision */}
+          <div>
+            <Button name="intent" value={ESTADO_PUBLICADO}>
+              Publicar
+            </Button>
+          </div>
+          <div>
+            <Button name="intent" value={ESTADO_INACTIVO}>
+              Inactivar
+            </Button>
+          </div>
+        </div>
+      </Form>
       <Tabs defaultValue="content" className="w-full mt-7">
         <TabsList className="grid w-fit grid-cols-3 mb-6">
           <TabsTrigger value="content">Content</TabsTrigger>
@@ -187,9 +241,10 @@ export default function Content() {
           <div>
             <input type="hidden" name="content" value={htmlContent} />
             <Editor
-              defaultValue=""
+              defaultValue={JSON.parse(content?.content as any)}
               onDebouncedUpdate={updateContent}
               debounceDuration={1000}
+              disableLocalStorage
             />
           </div>
         </TabsContent>
@@ -214,8 +269,11 @@ export default function Content() {
                     </TableCell>
                     <TableCell className="text-right">
                       <Form method="post">
-                        <input type="hidden" name="rol" value={rol.id}></input>
-                        <Button className="mr-1" name="intention" value="editRole">
+                        <Button
+                          className="mr-1"
+                          name="intention"
+                          value="editRole"
+                        >
                           <ClipboardEdit />
                         </Button>
                         <Button
@@ -239,7 +297,7 @@ export default function Content() {
         <TabsContent value="collaborators" className="space-y-4">
           <h2 className="text-xl font-bold mt-5">Colaboradores</h2>
           <Form method="post">
-            <ComboboxDemo usuarios={usuarios} onCheckBoxChange={onCheckBoxChange} ></ComboboxDemo>
+            <ComboboxDemo usuarios = {usuarios} onCheckBoxChange={onCheckBoxChange} ></ComboboxDemo>
             <Button
               className="mt-4 ml-2"
               name="intention"
@@ -247,7 +305,11 @@ export default function Content() {
             >
               Agregar colaborador
             </Button>
-            <input type="hidden" name="colaboratorId" value={valueAddColaborator} />
+            <input
+              type="hidden"
+              name="colaboratorId"
+              value={valueAddColaborator}
+            />
           </Form>
           <Table>
             <TableCaption>A list of your recent invoices.</TableCaption>
@@ -270,7 +332,11 @@ export default function Content() {
                   <TableCell className="text-right">
                     <Form method="post">
                       <ModifyColaborator />
-                      <input type="hidden" name="colaborador" value={colaborador.id} />
+                      <input
+                        type="hidden"
+                        name="colaborador"
+                        value={colaborador.id}
+                      />
                     </Form>
                   </TableCell>
                 </TableRow>
