@@ -103,7 +103,6 @@ const Home = () => {
           </div>
         </div>
       </Form>
-      <Form method="POST">
         {contents.length === 0 ? (
           <div className="border border-dashed rounded w-full py-10 flex flex-col items-center mt-8">
             <FilePlus2 className="text-gray-500" height={60} width={60} />
@@ -117,29 +116,30 @@ const Home = () => {
                   <CardTitle>{content.title}</CardTitle>
                   <MoveUpRight width={20} height={20} />
                 </CardHeader>
-                <CardContent>
-                  <div className="flex flex-row justify-between items-center">
-                    <CardDescription>{content.description}</CardDescription>
-                    <div>
-                      <Button size="sm" variant="outline" type="submit" name="likeCount" className="mr-1" value={content.likeCount + 1}><ThumbsUp /></Button>
-                      <Button size="sm" variant="outline" type="submit" name="likeCount" value={content.likeCount - 1}><ThumbsDown /></Button>
+                <Form method="POST">
+                  <CardContent>
+                    <div className="flex flex-row justify-between items-center">
+                      <CardDescription>{content.description}</CardDescription>
+                      <div>
+                        <Button size="sm" variant="outline" type="submit" name="likeCount" className="mr-1" value={content.likeCount + 1}><ThumbsUp /></Button>
+                        <Button size="sm" variant="outline" type="submit" name="likeCount" value={content.likeCount - 1}><ThumbsDown /></Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Input type="hidden" name="contentId" value={content.id}/>
-                  <Badge variant="secondary" className="flex flex-row items-center text-gray-400">
-                    <span className="text-sm mr-2">
-                      {content.likeCount} 
-                    </span>
-                    <ThumbsUp size={20} />
-                  </Badge>
-                </CardFooter>
+                  </CardContent>
+                  <CardFooter>
+                    <Input type="hidden" name="contentId" value={content.id}/>
+                    <Badge variant="secondary" className="flex flex-row items-center text-gray-400">
+                      <span className="text-sm mr-2">
+                        {content.likeCount} 
+                      </span>
+                      <ThumbsUp size={20} />
+                    </Badge>
+                  </CardFooter>
+                </Form>
               </Card>
             ))}
           </div>
         )}
-      </Form>
     </>
   );
 };
