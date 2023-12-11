@@ -8,7 +8,6 @@ import {
   redirect,
 } from "@remix-run/node";
 import { Form, useLoaderData, useNavigate, useSubmit } from "@remix-run/react";
-import { Editor } from "novel";
 import { useState } from "react";
 import { authenticator } from "~/services/auth.server";
 import { prisma } from "~/utils/db.server";
@@ -25,10 +24,10 @@ import {
 import { ClipboardEdit, Eraser } from "lucide-react";
 
 import ComboboxDemo from "../components/autofill.users";
-import { Exception } from "@prisma/client/runtime/library";
 import ModifyColaborator from "~/components/list.colaborator.content";
 import { ESTADO_INACTIVO, ESTADO_PUBLICADO } from "~/utils/constants";
 import ComboBoxRoles from "~/components/autofill.roles";
+import Tiptap from "~/components/TipTap";
 
 export const loader = async ({ request, params }: LoaderArgs) => {
   const user = (await authenticator.isAuthenticated(request)) as User;
@@ -93,18 +92,6 @@ export const action = async ({ request, params }: ActionArgs) => {
   const rolId = formData.get("rol");
   const html = formData.get("html");
   console.log(rolId);
-  if (html) {
-    await prisma.content.update({
-      where: {
-        id: contentId,
-      },
-      data: {
-        content: html,
-      },
-    });
-
-    return json({});
-  }
 
   if (typeof intent === "string") {
     try {
@@ -122,6 +109,20 @@ export const action = async ({ request, params }: ActionArgs) => {
     }
   }
   switch (intention) {
+    case "updateHtml":
+      if (html) {
+        await prisma.content.update({
+          where: {
+            id: contentId,
+          },
+          data: {
+            content: html,
+          },
+        });
+
+        return json({});
+      }
+      break;
     case "editRole":
       return redirect("/edit/role/" + rolId);
       break;
@@ -135,17 +136,17 @@ export const action = async ({ request, params }: ActionArgs) => {
     case "addColaborator":
       console.log("Haz seleccionado addColaborador");
       const entries = formData.entries();
-      const roleColaboradorId = formData.get("colaboratorRoleId")
+      const roleColaboradorId = formData.get("colaboratorRoleId");
       const colaboradorId = formData.get("colaboratorId")?.toString();
 
-      const lector = await prisma.role.findUnique({
+      const lector = (await prisma.role.findUnique({
         where: {
-          id:roleColaboradorId?.toString(),
-          contentId: contentId,  // Filtrar por contentId específico
-        }
-      }) as Role
-      console.log("este es el rol lector")
-      console.log(lector)
+          id: roleColaboradorId?.toString(),
+          contentId: contentId, // Filtrar por contentId específico
+        },
+      })) as Role;
+      console.log("este es el rol lector");
+      console.log(lector);
       if (lector !== null && lector !== undefined) {
         try {
           await prisma.collaborator.create({
@@ -155,8 +156,8 @@ export const action = async ({ request, params }: ActionArgs) => {
               roleId: lector.id,
             },
           });
-        } catch(e: any) {
-          alert("hubo un problema:"+e.message);
+        } catch (e: any) {
+          alert("hubo un problema:" + e.message);
           return json({ success: false, message: "Something went wrong!" });
         }
       }
@@ -166,8 +167,8 @@ export const action = async ({ request, params }: ActionArgs) => {
       const colaborador = formData.get("colaborador");
       await prisma.collaborator.delete({
         where: {
-          id:colaborador,
-        }
+          id: colaborador,
+        },
       });
     default:
       break;
@@ -178,8 +179,6 @@ export const action = async ({ request, params }: ActionArgs) => {
 export default function Content() {
   const { content, roles, colaboradores, usuarios } =
     useLoaderData<typeof loader>();
-  const submit = useSubmit();
-  const [htmlContent, setHtmlContent] = useState("");
   const [valueAddColaborator, setValueAddColaborator] = useState("");
   const [roleAddColaborator, setRoleAddColaborator] = useState("");
 
@@ -187,15 +186,6 @@ export default function Content() {
   const id = content?.id as String;
   const navigateToCreateRole = () => {
     navigate(`/create/role/` + id);
-  };
-
-  const updateContent = (editor: any) => {
-    submit(
-      {
-        html: JSON.stringify(editor.getJSON()),
-      },
-      { method: "POST" }
-    );
   };
 
   const userCheckHandler = (value: any) => {
@@ -207,9 +197,7 @@ export default function Content() {
 
   const roleCheckHandler = (value: any) => {
     setRoleAddColaborator(value === roleAddColaborator ? "" : value);
-    console.log(
-      "El id del rol seleccionado es: " + roleAddColaborator
-    );
+    console.log("El id del rol seleccionado es: " + roleAddColaborator);
   };
 
   return (
@@ -243,13 +231,7 @@ export default function Content() {
         </TabsList>
         <TabsContent value="content" className="space-y-4">
           <div>
-            <input type="hidden" name="content" value={htmlContent} />
-            <Editor
-              defaultValue={JSON.parse(content?.content as any)}
-              onDebouncedUpdate={updateContent}
-              debounceDuration={1000}
-              disableLocalStorage
-            />
+            <Tiptap html={content?.content ?? ""} />
           </div>
         </TabsContent>
         <TabsContent value="roles" className="space-y-4">
@@ -287,7 +269,7 @@ export default function Content() {
                         >
                           <Eraser />
                         </Button>
-                        <input type="hidden" name="rol" value={rol.id}/>
+                        <input type="hidden" name="rol" value={rol.id} />
                       </Form>
                     </TableCell>
                   </TableRow>
@@ -302,8 +284,15 @@ export default function Content() {
         <TabsContent value="collaborators" className="space-y-4">
           <h2 className="text-xl font-bold mt-5">Colaboradores</h2>
           <Form method="post">
-            <ComboboxDemo className="mr-2" usuarios = {usuarios} onCheckBoxChange={userCheckHandler} ></ComboboxDemo>
-            <ComboBoxRoles roles = {roles} onCheckBoxChange={roleCheckHandler} ></ComboBoxRoles>
+            <ComboboxDemo
+              className="mr-2"
+              usuarios={usuarios}
+              onCheckBoxChange={userCheckHandler}
+            ></ComboboxDemo>
+            <ComboBoxRoles
+              roles={roles}
+              onCheckBoxChange={roleCheckHandler}
+            ></ComboBoxRoles>
             <Button
               className="mt-4 ml-2"
               name="intention"
