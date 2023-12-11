@@ -44,7 +44,7 @@ export const action = async({request, params}: ActionArgs) => {
         id: contentId,
       },
       data: {
-        likeCount: Number(likeCount),
+        likeCount: Number(likeCount) > 0 ? Number(likeCount) : 0,
       }
     });
     return redirect('/home');
