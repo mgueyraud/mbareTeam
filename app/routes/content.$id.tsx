@@ -25,7 +25,7 @@ import { ClipboardEdit, Eraser } from "lucide-react";
 
 import ComboboxDemo from "../components/autofill.users";
 import ModifyColaborator from "~/components/list.colaborator.content";
-import { ESTADO_INACTIVO, ESTADO_PUBLICADO } from "~/utils/constants";
+import { ESTADO_INACTIVO, ESTADO_PUBLICADO, ESTADO_REVISION } from "~/utils/constants";
 import ComboBoxRoles from "~/components/autofill.roles";
 import Tiptap from "~/components/TipTap";
 
@@ -219,6 +219,11 @@ export default function Content() {
           <div>
             <Button name="intent" value={ESTADO_INACTIVO}>
               Inactivar
+            </Button>
+          </div>
+          <div>
+            <Button name="intent" value={ESTADO_REVISION}>
+              En revision
             </Button>
           </div>
         </div>
