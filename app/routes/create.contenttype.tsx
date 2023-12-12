@@ -16,6 +16,13 @@ import { useEffect } from "react";
 import { authenticator } from "~/services/auth.server";
 import { prisma } from "~/utils/db.server";
 
+
+/**
+ * Función para manejar la acción de creación de un nuevo tipo de contenido.
+ *
+ * @param {ActionArgs} args - Argumentos de la acción.
+ * @returns {Promise<RedirectResponse | JsonResponse>} - Promesa que resuelve en una respuesta de redirección o un objeto JSON de respuesta.
+ */
 export async function action({ request }: ActionArgs) {
   const user = (await authenticator.isAuthenticated(request, {
     failureRedirect: "/",
@@ -52,6 +59,12 @@ export async function action({ request }: ActionArgs) {
   return redirect("/contenttype/list");
 }
 
+/**
+ * Carga los datos necesarios para la página de creación de tipo de contenido.
+ *
+ * @param {LoaderArgs} args - Argumentos del cargador.
+ * @returns {Promise<{ user: User, categorias: Category[] }>} - Promesa que resuelve en un objeto que contiene el usuario y las categorías disponibles.
+ */
 export const loader = async ({ request }: LoaderArgs) => {
   const user = (await authenticator.isAuthenticated(request, {
     failureRedirect: "/",
@@ -63,6 +76,11 @@ export const loader = async ({ request }: LoaderArgs) => {
   };
 };
 
+/**
+ * Componente funcional para la creación de un nuevo tipo de contenido.
+ *
+ * @returns {ReactNode} - Nodo React que representa el formulario de creación de tipo de contenido.
+ */
 export default function CreateContentType() {
   const data = useActionData<typeof action>();
   const { categorias } = useLoaderData(); 

@@ -20,11 +20,10 @@ import DropdownMenu from "@/components/ui/dropdownmenu";
 
 
 /**
+ * Acción para crear nuevo contenido.
  *
- *
- * @export
- * @param {ActionArgs} { request }
- * @return {*} 
+ * @param {ActionArgs} args - Argumentos de la acción.
+ * @returns {Promise<RedirectResponse | JsonResponse>} - Promesa que resuelve en una respuesta de redirección o un objeto JSON de respuesta.
  */
 export async function action({ request }: ActionArgs) {
   const user = (await authenticator.isAuthenticated(request, {
@@ -63,6 +62,12 @@ export async function action({ request }: ActionArgs) {
   return redirect("/dashboard");
 }
 
+/**
+ * Carga los datos necesarios para la página de creación de contenido.
+ *
+ * @param {LoaderArgs} args - Argumentos del cargador.
+ * @returns {Promise<{ user: User, categorias: Category[], subcategorias: ContentType[] }>} - Promesa que resuelve en un objeto que contiene el usuario, las categorías y los tipos de contenido.
+ */
 export const loader = async ({ request }: LoaderArgs) => {
   const user = (await authenticator.isAuthenticated(request, {
     failureRedirect: "/",
@@ -78,9 +83,10 @@ export const loader = async ({ request }: LoaderArgs) => {
   };
 };
 /**
+ * Función para asignar tipos de contenido basados en una categoría seleccionada.
  *
- *
- * @param {string} categoryID
+ * @param {string} categoryID - ID de la categoría seleccionada.
+ * @returns {Promise<void>} - Promesa que resuelve sin valor.
  */
 async function asignarCat( categoryID: string) {
   const contentypes = await prisma.contentType.findMany({
@@ -88,6 +94,11 @@ async function asignarCat( categoryID: string) {
   });
 };
 
+/**
+ * Componente funcional para la creación de nuevo contenido.
+ *
+ * @returns {ReactNode} - Nodo React que representa el formulario de creación de contenido.
+ */
 export default function CreateContent() {
   const data = useActionData<typeof action>();
   const { toast } = useToast();
@@ -126,7 +137,7 @@ export default function CreateContent() {
             <Label htmlFor="title">Tipo de contenido</Label>
             <DropdownMenu title="" opciones={subcategorias.filter(sc => sc.categoryId === selectedCategoryId)} id="contentTypeId" name="contentTypeId"></DropdownMenu>
           </div>
-        </div>
+          </div>
         <div className="grid w-full items-center gap-1.5 mt-4">
           <Label htmlFor="description">Description</Label>
           <Textarea id="description" name="description" />

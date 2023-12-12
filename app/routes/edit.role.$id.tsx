@@ -19,6 +19,12 @@ import {
 import { useState } from "react";
 
 
+/**
+ * Carga los datos del rol y los permisos necesarios para la página de edición de rol.
+ *
+ * @param {LoaderArgs} args - Argumentos del cargador.
+ * @returns {Promise<{ role: Role, permisos: Permission[] }>} - Promesa que resuelve en un objeto que contiene el rol y los permisos.
+ */
 export const loader = async ({ request, params }: LoaderArgs) => {
   (await authenticator.isAuthenticated(request)) as User;
   const id = params.id as string;
@@ -34,11 +40,12 @@ export const loader = async ({ request, params }: LoaderArgs) => {
 
   return json({role, permisos});
 };
+
 /**
+ * Maneja la acción de editar un rol.
  *
- *
- * @param {ActionArgs} { request,params }
- * @return {*} 
+ * @param {ActionArgs} { request, params } - Argumentos de la acción.
+ * @returns {*} - Respuesta JSON o redirección.
  */
 export const action = async ({ request,params }: ActionArgs) => {
   const formData = await request.formData();
@@ -75,10 +82,9 @@ export const action = async ({ request,params }: ActionArgs) => {
 };
 
 /**
+ * Componente funcional para la página de edición de rol.
  *
- *
- * @export
- * @return {*} 
+ * @returns {*} - Nodo React que representa la página de edición de rol.
  */
 export default function EditRole() {
   const { role,permisos } = useLoaderData<typeof loader>();

@@ -16,7 +16,12 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-
+/**
+ * Carga los datos necesarios para la página de creación de roles.
+ *
+ * @param {LoaderArgs} args - Argumentos del cargador.
+ * @returns {Promise<{ content: Content | null, data: Permission[] }>} - Promesa que resuelve en un objeto que contiene el contenido y los datos de permisos.
+ */
 export const loader = async ({ request, params }: LoaderArgs) => {
   (await authenticator.isAuthenticated(request)) as User;
   const id = params.id as string;
@@ -31,6 +36,12 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   return json({content, data});
 };
 
+/**
+ * Maneja la acción de creación de un nuevo rol.
+ *
+ * @param {ActionArgs} args - Argumentos de la acción.
+ * @returns {Promise<RedirectResponse>} - Promesa que resuelve en una respuesta de redirección.
+ */
 export const action = async ({ request,params }: ActionArgs) => {
   const formData = await request.formData();
   const id = params.id as string;
@@ -59,6 +70,11 @@ export const action = async ({ request,params }: ActionArgs) => {
 };
 
 
+/**
+ * Componente funcional para la creación de un nuevo rol.
+ *
+ * @returns {ReactNode} - Nodo React que representa el formulario de creación de rol.
+ */
 export default function CreateRole() {
   const { data } = useLoaderData<typeof loader>();
 

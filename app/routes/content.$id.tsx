@@ -7,8 +7,7 @@ import {
   type LoaderArgs,
   redirect,
 } from "@remix-run/node";
-import { Form, useLoaderData, useNavigate, useSubmit } from "@remix-run/react";
-import { Editor } from "novel";
+import { Form, useLoaderData, useNavigate } from "@remix-run/react";
 import { useState } from "react";
 import { authenticator } from "~/services/auth.server";
 import { prisma } from "~/utils/db.server";
@@ -30,6 +29,26 @@ import ModifyColaborator from "~/components/list.colaborator.content";
 import { ESTADO_INACTIVO, ESTADO_PUBLICADO } from "~/utils/constants";
 import ComboBoxRoles from "~/components/autofill.roles";
 
+/**
+ * Tipo de datos para representar un usuario.
+ * @typedef {Object} User
+ * @property {string} username - El nombre de usuario del usuario.
+ * @property {string} email - La dirección de correo electrónico del usuario.
+ */
+
+/**
+ * Tipo de datos para representar un rol de usuario.
+ * @typedef {Object} Role
+ * @property {string} name - El nombre del rol.
+ * @property {string} description - Descripción del rol.
+ */
+
+/**
+ * Función para cargar datos del servidor.
+ * @param {Object} params - Parámetros de carga.
+ * @param {string} params.id - ID del elemento a cargar.
+ * @returns {Promise<Object>} - Promesa que resuelve en los datos cargados.
+ */
 export const loader = async ({ request, params }: LoaderArgs) => {
   const user = (await authenticator.isAuthenticated(request)) as User;
   if (!user) {
@@ -85,6 +104,13 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   return json({ content, roles, colaboradores, usuarios });
 };
 
+
+/**
+ * Función para manejar las acciones del formulario.
+ * @param {Object} request - Objeto de solicitud.
+ * @param {Object} params - Parámetros de la acción.
+ * @returns {Promise<Object>} - Promesa que resuelve en el resultado de la acción.
+ */
 export const action = async ({ request, params }: ActionArgs) => {
   const formData = await request.formData();
   const contentId = params.id as string;
@@ -175,6 +201,13 @@ export const action = async ({ request, params }: ActionArgs) => {
   return null;
 };
 
+/**
+ * Componente principal para la página de contenido.
+ * @component
+ * @example
+ * // Uso del componente en JSX/TSX
+ * <Content />
+ */
 export default function Content() {
   const { content, roles, colaboradores, usuarios } =
     useLoaderData<typeof loader>();

@@ -17,7 +17,12 @@ import { Badge } from "@/components/ui/badge"
 import DropdownMenu from "@/components/ui/dropdownmenu";
 import { Input } from "@/components/ui/input";
 
-// file: app/routes/dashboard.js
+/**
+ * Carga los datos necesarios para la página del panel de control.
+ *
+ * @param {ActionArgs} args - Argumentos del cargador.
+ * @returns {Promise<{ user: User, contents: Content[], categorias: Category[] }>} - Promesa que resuelve en un objeto que contiene el usuario, el contenido y las categorías.
+ */
 export const loader = async ({ request }: ActionArgs) => {
   const url = new URL(request.url);
   const categoryId = url.searchParams.get('categoryId');
@@ -75,7 +80,11 @@ export const loader = async ({ request }: ActionArgs) => {
   };
 };
 
-
+/**
+ * Componente funcional para el panel de control.
+ *
+ * @returns {ReactNode} - Nodo React que representa el panel de control.
+ */
 const Dashboard = () => {
   const { user, contents, categorias } = useLoaderData<typeof loader>();
   const categoria_select = function (option: ActionArgs) {

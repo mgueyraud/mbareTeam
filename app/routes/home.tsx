@@ -112,7 +112,7 @@ const Home = () => {
         ) : (
           <div className="mt-5 flex gap-8 flex-wrap">
             {contents.map((content) => (
-              <Card className="w-[350px]">
+              <Card className="w-[350px]" >
                 <CardHeader className="justify-between flex-row">
                   <CardTitle>{content.title}</CardTitle>
                   <MoveUpRight width={20} height={20} />
