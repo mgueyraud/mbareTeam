@@ -1,9 +1,6 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+  previewFeatures = ["fullTextIndex", "fullTextSearch"]
 }
 
 datasource db {
@@ -26,11 +23,11 @@ model User {
 model Collaborator {
   id           String   @id @default(cuid())
   userGoogleId String?
+  contentId    String?
+  roleId       String
   User         User?    @relation(fields: [userGoogleId], references: [googleId])
   Content      Content? @relation(fields: [contentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  contentId    String?
   role         Role     @relation(fields: [roleId], references: [id])
-  roleId       String
 }
 
 model Content {
@@ -39,14 +36,15 @@ model Content {
   content       String?        @db.Text
   description   String
   image         String?
+  userGoogleId  String?
+  contentTypeId String?
+  status        String         @default("Borrador")
+  likeCount     Int            @default(0)
+  dislikeCount  Int            @default(0)
   contentType   ContentType?   @relation(fields: [contentTypeId], references: [id])
   collaborators Collaborator[]
   User          User?          @relation(fields: [userGoogleId], references: [googleId], onDelete: Cascade, onUpdate: Cascade)
-  userGoogleId  String?
-  contentTypeId String?
   roles         Role[]
-  status        String         @default("Borrador") // Borrador, En revision, Publicado, Inactivo
-  likeCount     Int            @default(0)
 
   @@fulltext([title])
 }
@@ -55,8 +53,8 @@ model ContentType {
   id          String    @id @default(cuid())
   name        String
   description String
-  Category    Category? @relation(fields: [categoryId], references: [id])
   categoryId  String?
+  Category    Category? @relation(fields: [categoryId], references: [id])
   Content     Content[]
 }
 
@@ -70,16 +68,16 @@ model Role {
   id           String         @id @default(cuid())
   name         String
   description  String
+  contentId    String?
   permissions  Permissions[]
   Collaborator Collaborator[]
   Content      Content?       @relation(fields: [contentId], references: [id])
-  contentId    String?
 }
 
 model Permissions {
   id     String  @id @default(cuid())
   name   String
   type   String
-  Role   Role?   @relation(fields: [roleId], references: [id])
   roleId String?
+  Role   Role?   @relation(fields: [roleId], references: [id])
 }
