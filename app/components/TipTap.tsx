@@ -1,24 +1,69 @@
 import { useEditor, EditorContent } from "@tiptap/react";
 import TipTapMenuBar from "./TipTapMenuBar";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
 import { useSubmit } from "@remix-run/react";
+import Youtube from "@tiptap/extension-youtube";
 
 const Tiptap = ({ html }: { html?: string }) => {
-  const [editorState, setEditorState] = useState(
-    html ||
-      `<p>Hello World!</p>
-  <img src="https://source.unsplash.com/8xznAGy4HcY/800x400" />`
-  );
   const submit = useSubmit();
-
+  const [isChanging, setIsChanging] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   //https://www.codemzy.com/blog/tiptap-drag-drop-image
 
   const editor = useEditor({
     autofocus: true,
-    extensions: [StarterKit, Image],
-    content: editorState,
+    extensions: [
+      StarterKit,
+      Image.extend({
+        addNodeView() {
+          return ({ node, editor, getPos }) => {
+            // You can use a React component here if you prefer
+            const dom = document.createElement("div");
+            dom.className = "relative";
+
+            const img = document.createElement("img");
+            img.setAttribute("src", node.attrs.src);
+            img.setAttribute("alt", node.attrs.alt || "");
+
+            // Add any additional elements (like a delete button) here
+            const deleteButton = document.createElement("button");
+            deleteButton.className =
+              "absolute top-2 right-2 h-9	w-9 rounded-full bg-red-700 text-white";
+            deleteButton.textContent = "x";
+            deleteButton.onclick = () => {
+              if (typeof getPos !== "function") return;
+
+              fetch("/api/delete-image", {
+                method: "DELETE",
+                body: JSON.stringify({ image: node.attrs.src }),
+              }).then((res) => {
+                if (res.status === 200) {
+                  const transaction = editor.state.tr.delete(
+                    getPos(),
+                    getPos() + node.nodeSize
+                  );
+                  editor.view.dispatch(transaction);
+                }
+              });
+            };
+
+            dom.appendChild(img);
+            dom.appendChild(deleteButton);
+
+            return {
+              dom,
+              contentDOM: img,
+            };
+          };
+        },
+      }),
+      Youtube.configure({
+        controls: false,
+      }),
+    ],
+    content: html,
     editorProps: {
       handleDrop: function (view, event, slice, moved) {
         if (
@@ -29,10 +74,11 @@ const Tiptap = ({ html }: { html?: string }) => {
         ) {
           // if dropping external files
           let file = event.dataTransfer.files[0]; // the dropped file
-          let fileSize = Number((file.size / 1024 / 1024).toFixed(4)); // get the filesize in MB
+          // let fileSize = Number((file.size / 1024 / 1024).toFixed(4)); // get the filesize in MB
           if (
-            (file.type === "image/jpeg" || file.type === "image/png") &&
-            fileSize < 10
+            file.type === "image/jpeg" ||
+            file.type === "image/png" ||
+            file.type === "video/mp4"
           ) {
             // check valid image type under 10MB
             // check the dimensions
@@ -49,29 +95,32 @@ const Tiptap = ({ html }: { html?: string }) => {
               } else {
                 // valid image so upload to server
                 // uploadImage will be your function to upload the image to the server or s3 bucket somewhere
-                // uploadImage(file)
-                //   .then(function (response) {
-                //     // response is the image url for where it has been saved
-                //     // do something with the response
-                //   })
-                //   .catch(function (error) {
-                //     if (error) {
-                //       window.alert(
-                //         "There was a problem uploading your image, please try again."
-                //       );
-                //     }
-                //   });
 
-                const { schema } = view.state;
-                const coordinates = view.posAtCoords({
-                  left: event.clientX,
-                  top: event.clientY,
-                }) as { pos: number; inside: number };
-                const node = schema.nodes.image.create({
-                  src: _URL.createObjectURL(file),
-                }); // creates the image element
-                const transaction = view.state.tr.insert(coordinates.pos, node); // places it in the correct position
-                return view.dispatch(transaction);
+                const formData = new FormData();
+
+                formData.append("file", file);
+
+                fetch("/api/upload-image", {
+                  method: "POST",
+                  body: formData,
+                })
+                  .then((response) => response.json())
+                  .then((data) => {
+                    const { schema } = view.state;
+                    const coordinates = view.posAtCoords({
+                      left: event.clientX,
+                      top: event.clientY,
+                    }) as { pos: number; inside: number };
+                    const node = schema.nodes.image.create({
+                      src: data.url,
+                    }); // creates the image element
+
+                    const transaction = view.state.tr.insert(
+                      coordinates.pos,
+                      node
+                    ); // places it in the correct position
+                    return view.dispatch(transaction);
+                  });
               }
             };
           } else {
@@ -85,26 +134,26 @@ const Tiptap = ({ html }: { html?: string }) => {
       },
     },
     onUpdate: ({ editor }) => {
-      setEditorState(editor.getHTML());
+      setIsChanging(true);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+      timeoutRef.current = setTimeout(() => {
+        submit(
+          {
+            html: editor.getHTML(),
+            intention: "updateHtml",
+          },
+          { method: "POST" }
+        );
+        setIsChanging(false);
+      }, 600);
     },
   });
 
-  const updateContent = () => {
-    submit(
-      {
-        html: editorState,
-        intention: "updateHtml",
-      },
-      { method: "POST" }
-    );
-  };
-
   return (
-    <div className="p-4 shadow-md">
-      {editor && (
-        <TipTapMenuBar editor={editor} updateContent={updateContent} />
-      )}
-      <div className="mt-5 prose">
+    <div className="border border-gray-600 relative">
+      {editor && <TipTapMenuBar editor={editor} isChanging={isChanging} />}
+      <div className="mt-5 prose p-5">
         <EditorContent editor={editor} />
       </div>
     </div>

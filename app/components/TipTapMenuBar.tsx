@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import type { Editor } from "@tiptap/react";
 import {
   Bold,
@@ -17,45 +16,46 @@ import {
   Redo,
   Strikethrough,
   Undo,
+  Youtube,
 } from "lucide-react";
 
 const TipTapMenuBar = ({
   editor,
-  updateContent,
+  isChanging = false,
 }: {
   editor: Editor;
-  updateContent: () => void;
+  isChanging: boolean;
 }) => {
   return (
-    <div className="flex justify-between border-b pb-5 border-black">
+    <div className="flex justify-between bg-gray-700 p-4 sticky top-0 right-0 left-0">
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => editor.chain().focus().toggleBold().run()}
           disabled={!editor.can().chain().focus().toggleBold().run()}
           className={editor.isActive("bold") ? "is-active" : ""}
         >
-          <Bold className="w-6 h-6" />
+          <Bold className="w-6 h-6 text-white" />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleItalic().run()}
           disabled={!editor.can().chain().focus().toggleItalic().run()}
           className={editor.isActive("italic") ? "is-active" : ""}
         >
-          <Italic className="w-6 h-6" />
+          <Italic className="w-6 h-6 text-white" />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleStrike().run()}
           disabled={!editor.can().chain().focus().toggleStrike().run()}
           className={editor.isActive("strike") ? "is-active" : ""}
         >
-          <Strikethrough className="w-6 h-6" />
+          <Strikethrough className="w-6 h-6 text-white" />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleCode().run()}
           disabled={!editor.can().chain().focus().toggleCode().run()}
           className={editor.isActive("code") ? "is-active" : ""}
         >
-          <Code className="w-6 h-6" />
+          <Code className="w-6 h-6 text-white" />
         </button>
         <button
           onClick={() =>
@@ -65,7 +65,7 @@ const TipTapMenuBar = ({
             editor.isActive("heading", { level: 1 }) ? "is-active" : ""
           }
         >
-          <Heading1 className="w-6 h-6" />
+          <Heading1 className="w-6 h-6 text-white" />
         </button>
         <button
           onClick={() =>
@@ -75,7 +75,7 @@ const TipTapMenuBar = ({
             editor.isActive("heading", { level: 2 }) ? "is-active" : ""
           }
         >
-          <Heading2 className="w-6 h-6" />
+          <Heading2 className="w-6 h-6 text-white" />
         </button>
         <button
           onClick={() =>
@@ -85,7 +85,7 @@ const TipTapMenuBar = ({
             editor.isActive("heading", { level: 3 }) ? "is-active" : ""
           }
         >
-          <Heading3 className="w-6 h-6" />
+          <Heading3 className="w-6 h-6 text-white" />
         </button>
         <button
           onClick={() =>
@@ -95,7 +95,7 @@ const TipTapMenuBar = ({
             editor.isActive("heading", { level: 4 }) ? "is-active" : ""
           }
         >
-          <Heading4 className="w-6 h-6" />
+          <Heading4 className="w-6 h-6 text-white" />
         </button>
         <button
           onClick={() =>
@@ -105,7 +105,7 @@ const TipTapMenuBar = ({
             editor.isActive("heading", { level: 5 }) ? "is-active" : ""
           }
         >
-          <Heading5 className="w-6 h-6" />
+          <Heading5 className="w-6 h-6 text-white" />
         </button>
         <button
           onClick={() =>
@@ -115,46 +115,63 @@ const TipTapMenuBar = ({
             editor.isActive("heading", { level: 6 }) ? "is-active" : ""
           }
         >
-          <Heading6 className="w-6 h-6" />
+          <Heading6 className="w-6 h-6 text-white" />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           className={editor.isActive("bulletList") ? "is-active" : ""}
         >
-          <List className="w-6 h-6" />
+          <List className="w-6 h-6 text-white" />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           className={editor.isActive("orderedList") ? "is-active" : ""}
         >
-          <ListOrdered className="w-6 h-6" />
+          <ListOrdered className="w-6 h-6 text-white" />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
           className={editor.isActive("codeBlock") ? "is-active" : ""}
         >
-          <CodepenIcon className="w-6 h-6" />
+          <CodepenIcon className="w-6 h-6 text-white" />
         </button>
         <button
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           className={editor.isActive("blockquote") ? "is-active" : ""}
         >
-          <Quote className="w-6 h-6" />
+          <Quote className="w-6 h-6 text-white" />
+        </button>
+        <button
+          onClick={() => {
+            const url = prompt("Enter YouTube URL");
+
+            if (url) {
+              editor.commands.setYoutubeVideo({
+                src: url,
+                width: 640,
+                height: 480,
+              });
+            }
+          }}
+        >
+          <Youtube className="w-6 h-6 text-white" />
         </button>
         <button
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().chain().focus().undo().run()}
         >
-          <Undo className="w-6 h-6" />
+          <Undo className="w-6 h-6 text-white" />
         </button>
         <button
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().chain().focus().redo().run()}
         >
-          <Redo className="w-6 h-6" />
+          <Redo className="w-6 h-6 text-white" />
         </button>
       </div>
-      <Button onClick={updateContent}>Save</Button>
+      <p className="text-slate-400 text-xs my-auto">
+        {isChanging ? "Saving..." : "Saved!"}
+      </p>
     </div>
   );
 };

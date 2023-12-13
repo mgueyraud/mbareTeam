@@ -7,7 +7,7 @@ import {
   type LoaderArgs,
   redirect,
 } from "@remix-run/node";
-import { Form, useLoaderData, useNavigate, useSubmit } from "@remix-run/react";
+import { Form, useLoaderData, useNavigate } from "@remix-run/react";
 import { useState } from "react";
 import { authenticator } from "~/services/auth.server";
 import { prisma } from "~/utils/db.server";
