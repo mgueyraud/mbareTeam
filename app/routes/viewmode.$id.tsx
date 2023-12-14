@@ -5,12 +5,13 @@ import {
   type LoaderArgs,
   redirect,
 } from "@remix-run/node";
-import { Form, useLoaderData, useNavigate, useSubmit } from "@remix-run/react";
-import { useState } from "react";
+import { Form, useLoaderData } from "@remix-run/react";
+
 import { authenticator } from "~/services/auth.server";
 import { prisma } from "~/utils/db.server";
-
-import TiptapViewMode from "~/components/TiptapViewMode";
+import TiptapViewMode from "~/components/TipTapViewMode";
+import { Button } from "@/components/ui/button";
+import { MessageCircle } from "lucide-react";
 
 export const loader = async ({ request, params }: LoaderArgs) => {
   const user = (await authenticator.isAuthenticated(request)) as User;
@@ -26,8 +27,6 @@ export const loader = async ({ request, params }: LoaderArgs) => {
       },
     },
   });
-  console.log(usuarios);
-
   const content = await prisma.content.findUnique({
     where: {
       id,
@@ -64,7 +63,7 @@ export const loader = async ({ request, params }: LoaderArgs) => {
       return redirect("/");
     }
   }
-  return json({ content, roles, colaboradores, usuarios });
+  return json({ content });
 };
 
 export const action = async ({ request, params }: ActionArgs) => {
@@ -160,28 +159,8 @@ export const action = async ({ request, params }: ActionArgs) => {
 };
 
 export default function Content() {
-  const { content, roles, colaboradores, usuarios } =
+  const { content } =
     useLoaderData<typeof loader>();
-  const [valueAddColaborator, setValueAddColaborator] = useState("");
-  const [roleAddColaborator, setRoleAddColaborator] = useState("");
-
-  const navigate = useNavigate();
-  const id = content?.id as String;
-  const navigateToCreateRole = () => {
-    navigate(`/create/role/` + id);
-  };
-
-  const userCheckHandler = (value: any) => {
-    setValueAddColaborator(value === valueAddColaborator ? "" : value);
-    console.log(
-      "El id del colaborador seleccionado es: " + valueAddColaborator
-    );
-  };
-
-  const roleCheckHandler = (value: any) => {
-    setRoleAddColaborator(value === roleAddColaborator ? "" : value);
-    console.log("El id del rol seleccionado es: " + roleAddColaborator);
-  };
 
   return (
     <div>
@@ -193,13 +172,17 @@ export default function Content() {
               {content?.description}
             </p>
           </div>
-          {/* TODO: Agregar validacion para pasar solo de En Revision */}
         </div>
       </Form>
-        <div>
-            <TiptapViewMode html={content?.content ?? ""} />
-        </div>
-        
+      <div>
+        <TiptapViewMode html={content?.content ?? ""} />
+      </div>
+      <div className="mt-3">
+        <h2 className="text-xl">Comentarios</h2>
+        <Button className="mt-3">
+          Comentar <MessageCircle className="ml-2" />
+        </Button>
+      </div>
     </div>
   );
 }
