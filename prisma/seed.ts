@@ -78,7 +78,7 @@ async function main() {
       name: "Tecnología",
     },
   });
-  await prisma.category.create({
+  const data = await prisma.category.create({
     data: {
       name: "Deportes",
     },
@@ -140,6 +140,14 @@ async function main() {
       type: "General",
     },
   });
+  
+  await prisma.contentType.create({
+    data: {
+      description: "Futbol",
+      categoryId: data.id,
+      name: "Futbol"
+    }
+  })
 }
 
 main()

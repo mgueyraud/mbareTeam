@@ -1,3 +1,9 @@
+docker compose up
+npm i
+npx prisma studio
+npx prisma db push --force-reset
+npx prisma db seed
+
 > **Warning**  
 > The `@remix-run/vercel` runtime adapter has been deprecated in favor of out of
 > the box Vercel functionality and will be removed in Remix v2.  

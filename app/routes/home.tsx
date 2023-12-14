@@ -29,21 +29,29 @@ export const action = async ({ request, params }: ActionArgs) => {
   const id = params.id as string;
   const formData = await request.formData();
   const likeCount = formData.get("likeCount");
+  const dislikeCount = formData.get("dislikeCount");
   const contentId = formData.get("contentId");
   if (
-    !likeCount ||
     !contentId ||
-    typeof likeCount !== "string" ||
     typeof contentId !== "string"
   )
     return json({ success: false, message: "You should enter valid data" });
   try {
+    let content = await prisma.content.findFirst({
+      where: {
+        id: id ? id : contentId
+      },
+      include: {
+        User: true,
+      },
+    });
     const updatedContent = await prisma.content.update({
       where: {
         id: contentId,
       },
       data: {
-        likeCount: Number(likeCount) > 0 ? Number(likeCount) : 0,
+        likeCount: typeof likeCount === 'string' ? Number(likeCount) : content?.likeCount || 0,
+        dislikeCount: typeof dislikeCount === 'string' ? Number(dislikeCount) : content?.dislikeCount || 0,
       },
       include: {
         User: true,
@@ -70,6 +78,7 @@ export const loader = async ({ request }: ActionArgs) => {
   const url = new URL(request.url);
   const categoryId = url.searchParams.get("categoryId");
   const name = url.searchParams.get("name");
+
   const contents = await prisma.content.findMany({
     where: {
       AND: [
@@ -95,6 +104,7 @@ export const loader = async ({ request }: ActionArgs) => {
       title: true,
       description: true,
       likeCount: true,
+      dislikeCount: true,
     },
   });
 
@@ -104,12 +114,60 @@ export const loader = async ({ request }: ActionArgs) => {
     categorias,
   };
 };
-
+const HomeCard = ({ content }: { content: any }) => {
+  return (
+    <Card className="w-[350px]" key={content.id} >
+      <CardHeader className="justify-between flex-row">
+        <CardTitle>{content.title}</CardTitle>
+        <Link to={`/viewmode/${content.id}`}>
+          <MoveUpRight width={20} height={20} />
+        </Link>
+      </CardHeader>
+      <CardContent>
+        <div className="flex flex-row items-center">
+          <div className="w-3/4">
+            <CardDescription>{content.description}</CardDescription>
+          </div>
+          <div className="w-1/4">
+            <div className="mb-1">
+              <Badge variant="secondary" className="w-[4rem] flex flex-row items-center text-gray-400">
+                <span className="text-sm mr-2">
+                  {content.likeCount} 
+                </span>
+                <ThumbsUp size={20} />
+              </Badge>
+            </div>
+            <div>
+              <Badge variant="secondary" className="w-[4rem] flex flex-row items-center text-gray-400">
+                <span className="text-sm mr-2">
+                  {content.dislikeCount} 
+                </span>
+                <ThumbsDown size={20} />
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter>
+        <Form method="POST">
+          <Input type="hidden" name="contentId" value={content.id}/>
+          <Button size="sm" variant="outline" type="submit" name="likeCount" className="mr-1" value={content.likeCount + 1}><ThumbsUp /></Button>
+        </Form>
+        <Form method="POST">
+          <Input type="hidden" name="contentId" value={content.id}/>
+          <Button size="sm" variant="outline" type="submit" name="dislikeCount" value={content.dislikeCount + 1}><ThumbsDown /></Button>
+        </Form>
+      </CardFooter>
+    </Card>
+  );
+}
 const Home = () => {
-  const { contents, categorias } = useLoaderData<typeof loader>();
-  const categoria_select = function (option: ActionArgs) {
+  const { contents , categorias } = useLoaderData<typeof loader>();
+  const categoria_select = function(option : ActionArgs){
     console.log("opcion: ", option);
-  };
+  }
+  const contenidoDestacado = contents.filter(c => c.likeCount >= 3);
+  const contenidoRestante = contents.filter(c => c.likeCount < 3);
   return (
     <>
       <Form method="GET">
@@ -128,61 +186,31 @@ const Home = () => {
           </div>
         </div>
       </Form>
-      {contents.length === 0 ? (
-        <div className="border border-dashed rounded w-full py-10 flex flex-col items-center mt-8">
-          <FilePlus2 className="text-gray-500" height={60} width={60} />
-          <h2 className="text-xl font-bold mt-3">No content</h2>
-        </div>
-      ) : (
-        <div className="mt-5 flex gap-8 flex-wrap">
-          {contents.map((content) => (
-            <Card className="w-[350px]">
-              <CardHeader className="justify-between flex-row">
-                <CardTitle>{content.title}</CardTitle>
-                <MoveUpRight width={20} height={20} />
-              </CardHeader>
-              <Form method="POST">
-                <CardContent>
-                  <div className="flex flex-row justify-between items-center">
-                    <CardDescription>{content.description}</CardDescription>
-                    <div>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        type="submit"
-                        name="likeCount"
-                        className="mr-1"
-                        value={content.likeCount + 1}
-                      >
-                        <ThumbsUp />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        type="submit"
-                        name="likeCount"
-                        value={content.likeCount - 1}
-                      >
-                        <ThumbsDown />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Input type="hidden" name="contentId" value={content.id} />
-                  <Badge
-                    variant="secondary"
-                    className="flex flex-row items-center text-gray-400"
-                  >
-                    <span className="text-sm mr-2">{content.likeCount}</span>
-                    <ThumbsUp size={20} />
-                  </Badge>
-                </CardFooter>
-              </Form>
-            </Card>
-          ))}
-        </div>
-      )}
+        {contents.length === 0 ? (
+          <div className="border border-dashed rounded w-full py-10 flex flex-col items-center mt-8">
+            <FilePlus2 className="text-gray-500" height={60} width={60} />
+            <h2 className="text-xl font-bold mt-3">No content</h2>
+          </div>
+        ) : (
+          <>
+            <div className="mt-5 py-3">
+              <h2 className="font-bold">Contenido destacado</h2>
+              <div className="mt-5 flex gap-8 flex-wrap">
+                {contenidoDestacado.map((content) => (
+                  <HomeCard content={content} key={content.id}/>
+                ))}
+              </div>
+            </div>
+            <div className="border-t-2 py-3">
+              <h2 className="font-bold">Contenido</h2>
+              <div className="mt-5 flex gap-8 flex-wrap">
+                {contenidoRestante.map((content) => (
+                  <HomeCard content={content} key={content.id}/>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
     </>
   );
 };
