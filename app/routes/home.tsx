@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { redirect, type ActionArgs, json } from "@remix-run/node";
-import { Form, useLoaderData } from "@remix-run/react";
+import { Form, Link, useLoaderData } from "@remix-run/react";
 import { FilePlus2, MoveUpRight, Search, ThumbsDown, ThumbsUp, MessageCircle } from "lucide-react";
 import { prisma } from "~/utils/db.server";
 import {
@@ -94,7 +94,9 @@ const HomeCard = ({ content }: { content: any }) => {
     <Card className="w-[350px]" key={content.id} >
       <CardHeader className="justify-between flex-row">
         <CardTitle>{content.title}</CardTitle>
-        <MoveUpRight width={20} height={20} />
+        <Link to={`/viewmode/${content.id}`}>
+          <MoveUpRight width={20} height={20} />
+        </Link>
       </CardHeader>
       <CardContent>
         <div className="flex flex-row items-center">

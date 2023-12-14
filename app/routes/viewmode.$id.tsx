@@ -14,13 +14,11 @@ import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useEffect, useRef, useTransition } from "react";
+import { useEffect, useRef } from "react";
 
 export const loader = async ({ request, params }: LoaderArgs) => {
   const user = (await authenticator.isAuthenticated(request)) as User;
-  if (!user) {
-    return redirect("/");
-  }
+  
   const id = params.id as string;
 
   const content = await prisma.content.findUnique({
@@ -28,7 +26,11 @@ export const loader = async ({ request, params }: LoaderArgs) => {
       id,
     },
     select: {
-      comments: true,
+      comments: {
+        include: {
+          User: true
+        }
+      },
       userGoogleId: true,
       description: true,
       title: true,
@@ -36,30 +38,6 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     }
   });
 
-  const colaboradores = await prisma.collaborator.findMany({
-    where: {
-      contentId: id,
-    },
-    include: {
-      User: true,
-      role: {
-        include: {
-          permissions: true,
-        },
-      },
-    },
-  });
-  if (content?.userGoogleId !== user.googleId) {
-    //Si no soy el owner, checkear si tengo permisos
-    const colab = colaboradores.find((c) => c.userGoogleId === user.googleId);
-    if (!colab) {
-      return redirect("/");
-    }
-    const hasPermission = colab.role.permissions.some((p) => p.name === "leer");
-    if (!hasPermission) {
-      return redirect("/");
-    }
-  }
   return json({ content, user });
 };
 
@@ -72,6 +50,7 @@ export const action = async ({ request, params }: ActionArgs) => {
     return redirect("/");
   }
   if(!text || typeof text !== 'string') return json({});
+  console.log(user);
   await prisma.comment.create({
     data: {
       text,
@@ -83,15 +62,15 @@ export const action = async ({ request, params }: ActionArgs) => {
   return null;
 };
 
-const CommentCmp = ({ user, comment }: { user: User, comment: Comment }) => (
+const CommentCmp = ({ user, comment }: { user: any, comment: any}) => (
     <div className="flex items-center space-x-4">
         <Avatar>
-            <AvatarImage src={user.picture} />
-            <AvatarFallback>{user.email}</AvatarFallback>
+            <AvatarImage src={user?.picture} />
+            <AvatarFallback>{user?.email}</AvatarFallback>
         </Avatar>
         <div>
-            <p className="text-sm font-medium leading-none">{user.name}</p>
-            <p className="text-sm text-muted-foreground">{comment.text}</p>
+            <p className="text-sm font-medium leading-none">{user?.name}</p>
+            <p className="text-sm text-muted-foreground">{comment?.text}</p>
         </div>
     </div>
 )
@@ -107,6 +86,7 @@ export default function Content() {
       formRef.current?.reset();
     }
   });
+  console.log(content);
   return (
     <div>
       <div className="flex items-center gap-4">
@@ -125,13 +105,13 @@ export default function Content() {
         {content?.comments.length === 0 && <p>No hay comentarios :(</p>}
         {content?.comments.map(comment => (
           <div className="my-3" key={comment.id}>
-            <CommentCmp user={user} comment={comment}/>
+            <CommentCmp user={comment.User} comment={comment}/>
           </div>
         ))}
         <div className="mt-3">
           <Form method="POST" ref={formRef}>
             <Textarea id="text" name="text" />
-            <Button className="mt-3" type="submit">
+            <Button className="mt-3" type="submit" disabled={user ? false : true}>
               Comentar <MessageCircle className="ml-2" />
             </Button>
           </Form>

@@ -18,6 +18,7 @@ model User {
   description    String?
   contents       Content[]
   collaborations Collaborator[]
+  comments       Comment[]
 }
 model Comment {
   id           String @id @default(cuid())
@@ -25,6 +26,7 @@ model Comment {
   text         String
   contentId    String
   Content      Content? @relation(fields: [contentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  User         User?    @relation(fields: [userGoogleId], references: [googleId])
 }
 model Collaborator {
   id           String   @id @default(cuid())
