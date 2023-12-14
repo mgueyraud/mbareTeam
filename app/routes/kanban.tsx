@@ -19,6 +19,7 @@ import {
   ESTADO_REVISION,
 } from "~/utils/constants";
 import { DragEvent, useRef } from "react";
+import { sendEmail } from "~/utils/email.server";
 
 export const loader = async ({ request }: ActionArgs) => {
   const url = new URL(request.url);
@@ -101,7 +102,21 @@ export const action = async ({ request, params }: ActionArgs) => {
         data: {
           status,
         },
+        include: {
+          User: true,
+        },
       });
+
+      await sendEmail({
+        from: "Mbareteam <hello@resend.dev>",
+        to: content.User?.email ?? "",
+        subject: `Cambio de estado del proyeco ${content.title}`,
+        html: `
+            <h1>Proyecto "${content.title}"</h1>
+            <p>El estado del proyecto ha cambiado a"${content.status}"</p>
+        `,
+      });
+
       return redirect("/kanban");
     } catch {
       return json({ success: false, message: "Something went wrong!" });
