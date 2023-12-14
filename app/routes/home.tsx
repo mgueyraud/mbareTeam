@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { redirect, type ActionArgs, json } from "@remix-run/node";
-import { Form, Link, useLoaderData } from "@remix-run/react";
+import { Form, useLoaderData } from "@remix-run/react";
 import { FilePlus2, MoveUpRight, Search, ThumbsDown, ThumbsUp, MessageCircle } from "lucide-react";
 import { prisma } from "~/utils/db.server";
 import {
@@ -16,8 +16,6 @@ import DropdownMenu from "@/components/ui/dropdownmenu";
 import { ESTADO_PUBLICADO } from "~/utils/constants";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { authenticator } from "~/services/auth.server";
-import { User } from "@prisma/client";
 
 // file: app/routes/dashboard.js
 export const action = async({request, params}: ActionArgs) => {
@@ -60,10 +58,6 @@ export const loader = async ({ request }: ActionArgs) => {
   const categoryId = url.searchParams.get('categoryId');
   const name = url.searchParams.get('name');
   
-  const user = (await authenticator.isAuthenticated(request, {
-    failureRedirect: "/",
-  })) as User;
-
   const contents = await prisma.content.findMany({
     where: {
       AND: [
@@ -93,11 +87,9 @@ export const loader = async ({ request }: ActionArgs) => {
   return {
     contents,
     categorias,
-    user,
   };
 };
-const HomeCard = ({ content, user }: { content: any, user: any}) => {
-  
+const HomeCard = ({ content }: { content: any }) => {
   return (
     <Card className="w-[350px]" key={content.id} >
       <CardHeader className="justify-between flex-row">
@@ -138,19 +130,13 @@ const HomeCard = ({ content, user }: { content: any, user: any}) => {
           <Input type="hidden" name="contentId" value={content.id}/>
           <Button size="sm" variant="outline" type="submit" name="dislikeCount" value={content.dislikeCount + 1}><ThumbsDown /></Button>
         </Form>
-        <Button variant="outline" size="sm" className="ml-1" 
-          // onClick={openCommentModal}
-          disabled={user ? false : true}
-        >
-          <MessageCircle />
-        </Button>
       </CardFooter>
     </Card>
   );
 }
 const Home = () => {
-  const { contents , categorias, user } = useLoaderData<typeof loader>();
-  const categoria_select=function(option : ActionArgs){
+  const { contents , categorias } = useLoaderData<typeof loader>();
+  const categoria_select = function(option : ActionArgs){
     console.log("opcion: ", option);
   }
   const contenidoDestacado = contents.filter(c => c.likeCount >= 3);
@@ -177,7 +163,7 @@ const Home = () => {
               <h2 className="font-bold">Contenido destacado</h2>
               <div className="mt-5 flex gap-8 flex-wrap">
                 {contenidoDestacado.map((content) => (
-                  <HomeCard content={content} user={user} key={content.id}/>
+                  <HomeCard content={content} key={content.id}/>
                 ))}
               </div>
             </div>
@@ -185,7 +171,7 @@ const Home = () => {
               <h2 className="font-bold">Contenido</h2>
               <div className="mt-5 flex gap-8 flex-wrap">
                 {contenidoRestante.map((content) => (
-                  <HomeCard content={content} user={user} key={content.id}/>
+                  <HomeCard content={content} key={content.id}/>
                 ))}
               </div>
             </div>
