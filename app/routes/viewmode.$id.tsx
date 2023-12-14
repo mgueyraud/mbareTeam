@@ -12,6 +12,7 @@ import { prisma } from "~/utils/db.server";
 import TiptapViewMode from "~/components/TipTapViewMode";
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 export const loader = async ({ request, params }: LoaderArgs) => {
   const user = (await authenticator.isAuthenticated(request)) as User;
@@ -20,23 +21,10 @@ export const loader = async ({ request, params }: LoaderArgs) => {
   }
   const id = params.id as string;
 
-  const usuarios = await prisma.user.findMany({
-    where: {
-      NOT: {
-        username: user.username,
-      },
-    },
-  });
   const content = await prisma.content.findUnique({
     where: {
       id,
-    },
-  });
-
-  const roles = await prisma.role.findMany({
-    where: {
-      contentId: id,
-    },
+    }
   });
 
   const colaboradores = await prisma.collaborator.findMany({
@@ -69,119 +57,50 @@ export const loader = async ({ request, params }: LoaderArgs) => {
 export const action = async ({ request, params }: ActionArgs) => {
   const formData = await request.formData();
   const contentId = params.id as string;
-  const intention = formData.get("intention");
-  const intent = formData.get("intent");
-  const rolId = formData.get("rol");
-  const html = formData.get("html");
-  console.log(rolId);
-
-  if (typeof intent === "string") {
-    try {
-      const content = await prisma.content.update({
-        where: {
-          id: contentId,
-        },
-        data: {
-          status: intent,
-        },
-      });
-      return redirect("/dashboard");
-    } catch {
-      return json({ success: false, message: "Something went wrong!" });
-    }
+  const text = formData.get("text");
+  const user = (await authenticator.isAuthenticated(request)) as User;
+  if (!user) {
+    return redirect("/");
   }
-  switch (intention) {
-    case "updateHtml":
-      if (html) {
-        await prisma.content.update({
-          where: {
-            id: contentId,
-          },
-          data: {
-            content: html,
-          },
-        });
-
-        return json({});
-      }
-      break;
-    case "editRole":
-      return redirect("/edit/role/" + rolId);
-      break;
-    case "deleteRole":
-      await prisma.role.delete({
-        where: {
-          id: rolId?.toString(),
-        },
-      });
-      break;
-    case "addColaborator":
-      console.log("Haz seleccionado addColaborador");
-      const entries = formData.entries();
-      const roleColaboradorId = formData.get("colaboratorRoleId");
-      const colaboradorId = formData.get("colaboratorId")?.toString();
-
-      const lector = (await prisma.role.findUnique({
-        where: {
-          id: roleColaboradorId?.toString(),
-          contentId: contentId, // Filtrar por contentId específico
-        },
-      })) as Role;
-      console.log("este es el rol lector");
-      console.log(lector);
-      if (lector !== null && lector !== undefined) {
-        try {
-          await prisma.collaborator.create({
-            data: {
-              userGoogleId: colaboradorId,
-              contentId: contentId.toString(),
-              roleId: lector.id,
-            },
-          });
-        } catch (e: any) {
-          alert("hubo un problema:" + e.message);
-          return json({ success: false, message: "Something went wrong!" });
-        }
-      }
-
-      break;
-    case "deleteColaborator":
-      const colaborador = formData.get("colaborador");
-      await prisma.collaborator.delete({
-        where: {
-          id: colaborador,
-        },
-      });
-    default:
-      break;
-  }
+  if(!text || typeof text !== 'string') return json({});
+  await prisma.comment.create({
+    data: {
+      text,
+      contentId,
+      userGoogleId: user.googleId,
+    }, 
+  });
+  
   return null;
 };
 
 export default function Content() {
   const { content } =
     useLoaderData<typeof loader>();
-
   return (
     <div>
-      <Form method="POST">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">{content?.title}</h1>
-            <p className="text-lg font-500 text-gray-500">
-              {content?.description}
-            </p>
-          </div>
+      <div className="flex items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">{content?.title}</h1>
+          <p className="text-lg font-500 text-gray-500">
+            {content?.description}
+          </p>
         </div>
-      </Form>
+      </div>
       <div>
         <TiptapViewMode html={content?.content ?? ""} />
       </div>
-      <div className="mt-3">
+      <div className="mt-5">
         <h2 className="text-xl">Comentarios</h2>
-        <Button className="mt-3">
-          Comentar <MessageCircle className="ml-2" />
-        </Button>
+        {/* {content.comments} */}
+        <div className="mt-3">
+          <Form method="POST">
+            <Textarea id="text" name="text" />
+            <Button className="mt-3">
+              Comentar <MessageCircle className="ml-2" />
+            </Button>
+          </Form>
+        </div>
       </div>
     </div>
   );
