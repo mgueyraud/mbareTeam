@@ -15,10 +15,11 @@ import { MessageCircle } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect, useRef } from "react";
+import { ESTADO_PUBLICADO } from "~/utils/constants";
 
 export const loader = async ({ request, params }: LoaderArgs) => {
   const user = (await authenticator.isAuthenticated(request)) as User;
-  
+
   const id = params.id as string;
 
   const content = await prisma.content.findUnique({
@@ -28,15 +29,18 @@ export const loader = async ({ request, params }: LoaderArgs) => {
     select: {
       comments: {
         include: {
-          User: true
-        }
+          User: true,
+        },
       },
       userGoogleId: true,
       description: true,
       title: true,
       content: true,
-    }
+      status: true,
+    },
   });
+
+  if (content?.status !== ESTADO_PUBLICADO) return redirect("/home");
 
   return json({ content, user });
 };
@@ -49,40 +53,39 @@ export const action = async ({ request, params }: ActionArgs) => {
   if (!user) {
     return redirect("/");
   }
-  if(!text || typeof text !== 'string') return json({});
+  if (!text || typeof text !== "string") return json({});
   console.log(user);
   await prisma.comment.create({
     data: {
       text,
       contentId,
       userGoogleId: user.googleId,
-    }, 
+    },
   });
-  
+
   return null;
 };
 
-const CommentCmp = ({ user, comment }: { user: any, comment: any}) => (
-    <div className="flex items-center space-x-4">
-        <Avatar>
-            <AvatarImage src={user?.picture} />
-            <AvatarFallback>{user?.email}</AvatarFallback>
-        </Avatar>
-        <div>
-            <p className="text-sm font-medium leading-none">{user?.name}</p>
-            <p className="text-sm text-muted-foreground">{comment?.text}</p>
-        </div>
+const CommentCmp = ({ user, comment }: { user: any; comment: any }) => (
+  <div className="flex items-center space-x-4">
+    <Avatar>
+      <AvatarImage src={user?.picture} />
+      <AvatarFallback>{user?.email}</AvatarFallback>
+    </Avatar>
+    <div>
+      <p className="text-sm font-medium leading-none">{user?.name}</p>
+      <p className="text-sm text-muted-foreground">{comment?.text}</p>
     </div>
-)
+  </div>
+);
 
 export default function Content() {
-  const { content, user } =
-    useLoaderData<typeof loader>();
+  const { content, user } = useLoaderData<typeof loader>();
   let transition = useNavigation();
-  let isAdding = transition.state === 'submitting'
+  let isAdding = transition.state === "submitting";
   let formRef = useRef<HTMLFormElement>(null);
   useEffect(() => {
-    if(!isAdding){
+    if (!isAdding) {
       formRef.current?.reset();
     }
   });
@@ -103,15 +106,19 @@ export default function Content() {
       <div className="mt-5">
         <h2 className="text-xl">Comentarios</h2>
         {content?.comments.length === 0 && <p>No hay comentarios :(</p>}
-        {content?.comments.map(comment => (
+        {content?.comments.map((comment) => (
           <div className="my-3" key={comment.id}>
-            <CommentCmp user={comment.User} comment={comment}/>
+            <CommentCmp user={comment.User} comment={comment} />
           </div>
         ))}
         <div className="mt-3">
           <Form method="POST" ref={formRef}>
             <Textarea id="text" name="text" />
-            <Button className="mt-3" type="submit" disabled={user ? false : true}>
+            <Button
+              className="mt-3"
+              type="submit"
+              disabled={user ? false : true}
+            >
               Comentar <MessageCircle className="ml-2" />
             </Button>
           </Form>
