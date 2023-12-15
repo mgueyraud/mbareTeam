@@ -1,6 +1,6 @@
 import { Content, User } from "@prisma/client";
 import { ActionArgs, json, redirect } from "@remix-run/node";
-import { Link, useLoaderData, useSubmit } from "@remix-run/react";
+import { Form, Link, useLoaderData, useSubmit } from "@remix-run/react";
 import { FilePlus2, MoveUpRight, Search } from "lucide-react";
 import { authenticator } from "~/services/auth.server";
 import { prisma } from "~/utils/db.server";
@@ -20,6 +20,7 @@ import {
 } from "~/utils/constants";
 import { DragEvent, useRef } from "react";
 import { sendEmail } from "~/utils/email.server";
+import { Button } from "@/components/ui/button";
 
 export const loader = async ({ request }: ActionArgs) => {
   const url = new URL(request.url);
@@ -87,38 +88,50 @@ export const action = async ({ request, params }: ActionArgs) => {
   const intent = formData.get("intent");
   const id = formData.get("id");
   const status = formData.get("status");
-  console.log({ id, status, intent });
-  // if()
-  if (
-    typeof intent === "string" &&
-    typeof id === "string" &&
-    typeof status === "string"
-  ) {
+  if(intent === "STATUS_CHANGE"){
+    if (
+      typeof intent === "string" &&
+      typeof id === "string" &&
+      typeof status === "string"
+    ) {
+      
+        try {
+          const content = await prisma.content.update({
+            where: {
+              id,
+            },
+            data: {
+              status,
+            },
+            include: {
+              User: true,
+            },
+          });
+
+          await sendEmail({
+            from: "Mbareteam <hello@resend.dev>",
+            to: content.User?.email ?? "",
+            subject: `Cambio de estado del proyeco ${content.title}`,
+            html: `
+                <h1>Proyecto "${content.title}"</h1>
+                <p>El estado del proyecto ha cambiado a"${content.status}"</p>
+            `,
+          });
+
+          return redirect("/kanban");
+        } catch {
+          return json({ success: false, message: "Something went wrong!" });
+        }
+    }
+  }else if(intent === "RESET_KANBAN"){
     try {
-      const content = await prisma.content.update({
-        where: {
-          id,
-        },
+      await prisma.content.updateMany({
         data: {
-          status,
-        },
-        include: {
-          User: true,
+          status: ESTADO_INACTIVO,
         },
       });
-
-      await sendEmail({
-        from: "Mbareteam <hello@resend.dev>",
-        to: content.User?.email ?? "",
-        subject: `Cambio de estado del proyeco ${content.title}`,
-        html: `
-            <h1>Proyecto "${content.title}"</h1>
-            <p>El estado del proyecto ha cambiado a"${content.status}"</p>
-        `,
-      });
-
       return redirect("/kanban");
-    } catch {
+    } catch (error) {
       return json({ success: false, message: "Something went wrong!" });
     }
   }
@@ -136,8 +149,9 @@ const KanbanCard = ({
       to={`/content/${content.id}`}
       draggable
       onDragEnd={(e) => handleDragEnd(e, content.id)}
+      className=""
     >
-      <Card className="">
+      <Card className="my-2">
         <CardHeader className="">
           <div className="flex flex-col">
             <div className="justify-between flex flex-row">
@@ -163,7 +177,7 @@ const KanbanCard = ({
 };
 const Kanban = () => {
   const submit = useSubmit();
-  const { user, contents, categorias } = useLoaderData<typeof loader>();
+  const { contents } = useLoaderData<typeof loader>();
   const inactiveColumnRef = useRef<HTMLDivElement>(null);
   const borradorColumnRef = useRef<HTMLDivElement>(null);
   const revisionColumnRef = useRef<HTMLDivElement>(null);
@@ -208,66 +222,75 @@ const Kanban = () => {
       submit({ status, intent: "STATUS_CHANGE", id }, { method: "POST" });
     }
   };
-
+  const resetKanban = () => {
+    submit({intent: "RESET_KANBAN"}, { method: "POST" });
+  }
   return (
-    <div className="mt-5 grid grid-cols-4 h-screen">
-      <div className="border-r-4 border-primary-100" ref={inactiveColumnRef}>
-        <h1 className="text-center mb-5">Inactivo</h1>
-        <div className="px-3">
-          {contents
-            .filter((c) => c.status === ESTADO_INACTIVO)
-            .map((c: Content) => (
-              <KanbanCard
-                key={c.id}
-                content={c}
-                handleDragEnd={handleDragEnd}
-              />
-            ))}
+    <>
+      <div className="w-full flex justify-end">
+        <Form method="POST">
+          <Button type="submit" variant="destructive" onClick={resetKanban} name="intent" value="RESET_KANBAN">Reiniciar tablero</Button>
+        </Form>
+      </div>
+      <div className="mt-5 grid grid-cols-4 h-screen">
+        <div className="border-r-4 border-primary-100" ref={inactiveColumnRef}>
+          <h1 className="text-center mb-5">Inactivo</h1>
+          <div className="px-3">
+            {contents
+              .filter((c) => c.status === ESTADO_INACTIVO)
+              .map((c: Content) => (
+                <KanbanCard
+                  key={c.id}
+                  content={c}
+                  handleDragEnd={handleDragEnd}
+                />
+              ))}
+          </div>
+        </div>
+        <div className="border-r-4 border-primary-100" ref={borradorColumnRef}>
+          <h1 className="text-center mb-5">Borrador</h1>
+          <div className="px-3">
+            {contents
+              .filter((c) => c.status === ESTADO_BORRADOR)
+              .map((c: Content) => (
+                <KanbanCard
+                  key={c.id}
+                  content={c}
+                  handleDragEnd={handleDragEnd}
+                />
+              ))}
+          </div>
+        </div>
+        <div className="border-r-4 border-primary-100" ref={revisionColumnRef}>
+          <h1 className="text-center mb-5">En revision</h1>
+          <div className="px-3">
+            {contents
+              .filter((c) => c.status === ESTADO_REVISION)
+              .map((c: Content) => (
+                <KanbanCard
+                  key={c.id}
+                  content={c}
+                  handleDragEnd={handleDragEnd}
+                />
+              ))}
+          </div>
+        </div>
+        <div className="" ref={publicadoColumnRef}>
+          <h1 className="text-center mb-5">Publicado</h1>
+          <div className="px-3">
+            {contents
+              .filter((c) => c.status === ESTADO_PUBLICADO)
+              .map((c: Content) => (
+                <KanbanCard
+                  key={c.id}
+                  content={c}
+                  handleDragEnd={handleDragEnd}
+                />
+              ))}
+          </div>
         </div>
       </div>
-      <div className="border-r-4 border-primary-100" ref={borradorColumnRef}>
-        <h1 className="text-center mb-5">Borrador</h1>
-        <div className="px-3">
-          {contents
-            .filter((c) => c.status === ESTADO_BORRADOR)
-            .map((c: Content) => (
-              <KanbanCard
-                key={c.id}
-                content={c}
-                handleDragEnd={handleDragEnd}
-              />
-            ))}
-        </div>
-      </div>
-      <div className="border-r-4 border-primary-100" ref={revisionColumnRef}>
-        <h1 className="text-center mb-5">En revision</h1>
-        <div className="px-3">
-          {contents
-            .filter((c) => c.status === ESTADO_REVISION)
-            .map((c: Content) => (
-              <KanbanCard
-                key={c.id}
-                content={c}
-                handleDragEnd={handleDragEnd}
-              />
-            ))}
-        </div>
-      </div>
-      <div className="" ref={publicadoColumnRef}>
-        <h1 className="text-center mb-5">Publicado</h1>
-        <div className="px-3">
-          {contents
-            .filter((c) => c.status === ESTADO_PUBLICADO)
-            .map((c: Content) => (
-              <KanbanCard
-                key={c.id}
-                content={c}
-                handleDragEnd={handleDragEnd}
-              />
-            ))}
-        </div>
-      </div>
-    </div>
+    </>
   );
 };
 

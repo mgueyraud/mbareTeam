@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-function DropdownMenu(props:any) {
+function DropdownMenu(props: any) {
   const [selectedOption, setSelectedOption] = useState('');
 
   const handleOptionChange = (e:any) => {
@@ -12,7 +12,7 @@ function DropdownMenu(props:any) {
   return (
     <div>
       <label>{props.title}</label>
-      <select value={selectedOption} onChange={handleOptionChange} name={props.name}>
+      <select value={selectedOption} onChange={handleOptionChange} name={props.name} required={props.required ? true : false}>
         <option value=""> -- Selecciona un valor -- </option>
         {props.opciones.map((opcion:any) => (
           <option key={opcion.id} value={opcion.id}>

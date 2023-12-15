@@ -17,8 +17,6 @@ import { prisma } from "~/utils/db.server";
 import { Link, useLoaderData } from "@remix-run/react";
 import DropdownMenu from "@/components/ui/dropdownmenu";
 
-
-
 /**
  *
  *
@@ -59,7 +57,6 @@ export async function action({ request }: ActionArgs) {
   } catch {
     return json({ success: false, message: "Something went wrong!" });
   }
-
   return redirect("/dashboard");
 }
 
@@ -91,7 +88,7 @@ async function asignarCat( categoryID: string) {
 export default function CreateContent() {
   const data = useActionData<typeof action>();
   const { toast } = useToast();
-  const { user, categorias, subcategorias } = useLoaderData<typeof loader>();
+  const { categorias, subcategorias } = useLoaderData<typeof loader>();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -120,18 +117,18 @@ export default function CreateContent() {
         <div className="grid w-full items-center gap-1.5 mt-4">
           <div>
             <Label htmlFor="title">Categoría</Label>
-            <DropdownMenu title="" opciones={categorias} onChange={(value: string) => setSelectedCategoryId(value)} id="categoryId" name="categoryId"></DropdownMenu>
+            <DropdownMenu required title="" opciones={categorias} onChange={(value: string) => setSelectedCategoryId(value)} id="categoryId" name="categoryId"></DropdownMenu>
           </div>
           <div>
             <Label htmlFor="title">Tipo de contenido</Label>
-            <DropdownMenu title="" opciones={subcategorias.filter(sc => sc.categoryId === selectedCategoryId)} id="contentTypeId" name="contentTypeId"></DropdownMenu>
+            <DropdownMenu required title="" opciones={subcategorias.filter(sc => sc.categoryId === selectedCategoryId)} id="contentTypeId" name="contentTypeId"></DropdownMenu>
           </div>
         </div>
         <div className="grid w-full items-center gap-1.5 mt-4">
           <Label htmlFor="description">Description</Label>
           <Textarea id="description" name="description" />
         </div>
-        <Button className="mt-3">Create</Button>
+        <Button className="mt-3">Crear</Button>
       </Form>
     </div>
   );
