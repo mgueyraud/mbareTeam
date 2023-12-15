@@ -56,7 +56,11 @@ export const loader = async ({ request }: LoaderArgs) => {
   const user = (await authenticator.isAuthenticated(request, {
     failureRedirect: "/",
   })) as User;
-  const categorias = await prisma.category.findMany({});
+  const categorias = await prisma.category.findMany({
+    where: {
+      isActive: true,
+    }
+  });
   return {
     user,
     categorias,

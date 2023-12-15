@@ -55,7 +55,12 @@ export default function Header() {
             >
               Tipo de contenido
             </Link>
-            
+            <Link
+              to="/reportes"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              Reportes
+            </Link>
           </>}
         </div>
         {!data || !data.user ? (
