@@ -20,14 +20,16 @@ model User {
   collaborations Collaborator[]
   comments       Comment[]
 }
+
 model Comment {
-  id           String @id @default(cuid())
+  id           String   @id @default(cuid())
   userGoogleId String?
   text         String
   contentId    String
   Content      Content? @relation(fields: [contentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   User         User?    @relation(fields: [userGoogleId], references: [googleId])
 }
+
 model Collaborator {
   id           String   @id @default(cuid())
   userGoogleId String?
@@ -46,6 +48,7 @@ model Content {
   image         String?
   userGoogleId  String?
   contentTypeId String?
+  expireDate    String?
   status        String         @default("Borrador")
   likeCount     Int            @default(0)
   dislikeCount  Int            @default(0)
@@ -54,6 +57,7 @@ model Content {
   User          User?          @relation(fields: [userGoogleId], references: [googleId], onDelete: Cascade, onUpdate: Cascade)
   roles         Role[]
   comments      Comment[]
+
   @@fulltext([title])
 }
 
