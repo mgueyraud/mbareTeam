@@ -107,3 +107,4 @@ model RolePermissions {
   @@index([roleId], map: "RolePermissions_roleId_fkey")
 }
 
+
