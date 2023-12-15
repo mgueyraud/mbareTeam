@@ -102,3 +102,4 @@ model RolePermissions {
   @@index([permissionsId], map: "RolePermissions_permissionsId_fkey")
   @@index([roleId], map: "RolePermissions_roleId_fkey")
 }
+
