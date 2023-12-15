@@ -2,7 +2,7 @@
     "crons": [
         {
         "path": "/api/check-expire-date",
-        "schedule": "*/1 * * * *"
+        "schedule": "*/2 * * * *"
         }
     ]
 }
