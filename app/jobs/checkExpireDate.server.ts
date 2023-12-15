@@ -9,6 +9,7 @@ export const job = client.defineJob({
   trigger: intervalTrigger({
     seconds: 60,
   }),
+  enabled: false,
   run: async (payload, io, ctx) => {
 
     const currentDate = new Date().toISOString();
