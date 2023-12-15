@@ -131,8 +131,8 @@ export const action = async ({ request, params }: ActionArgs) => {
         },
       });
       return redirect("/kanban");
-    } catch (error) {
-      return json({ success: false, message: "Something went wrong!" });
+    } catch {
+      return json({ success: false, message: "Algo salió mal!" });
     }
   }
 };

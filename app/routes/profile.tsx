@@ -56,7 +56,7 @@ export async function action({ request }: ActionArgs) {
       await authenticator.logout(request, { redirectTo: "/" });
       return json({
         success: true,
-        message: "User deleted succesfully",
+        message: "Usuario eliminado exitosamente",
       });
     case "update":
       const username = "" + formData.get("username");
@@ -74,13 +74,13 @@ export async function action({ request }: ActionArgs) {
 
       return json({
         success: true,
-        message: "User data updated succesfully",
+        message: "Datos de usuario actualizados exitosamente",
       });
   }
 
   return json({
     success: false,
-    message: "Something went wrong",
+    message: "Algo salió mal",
   });
 }
 
@@ -118,11 +118,11 @@ export default function Profile() {
     <div>
       <Form method="POST">
         <div className="grid w-full max-w-sm items-center gap-1.5">
-          <Label htmlFor="username">Username</Label>
+          <Label htmlFor="username">Nombre de usuario</Label>
           <Input id="username" name="username" defaultValue={username} />
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5 mt-5">
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description">Descripcion</Label>
           <Textarea
             id="description"
             name="description"

@@ -39,7 +39,7 @@ export async function action({ request }: ActionArgs) {
   })) as User;
 
   if (!user)
-    return json({ success: false, message: "User should be logged in" });
+    return json({ success: false, message: "El usuario debe iniciar sesión" });
 
   const formData = await request.formData();
   const title = formData.get("title");
@@ -55,7 +55,7 @@ export async function action({ request }: ActionArgs) {
     typeof contentTypeId !== "string" ||
     typeof expireDate !== "string"
   )
-    return json({ success: false, message: "You should enter valid data" });
+    return json({ success: false, message: "Debes ingresar datos válidos" });
 
   try {
     await prisma.content.create({
@@ -68,7 +68,7 @@ export async function action({ request }: ActionArgs) {
       },
     });
   } catch {
-    return json({ success: false, message: "Something went wrong!" });
+    return json({ success: false, message: "Algo salió mal!" });
   }
   return redirect("/dashboard");
 }
@@ -78,7 +78,11 @@ export const loader = async ({ request }: LoaderArgs) => {
     failureRedirect: "/",
   })) as User;
 
-  const categorias = await prisma.category.findMany();
+  const categorias = await prisma.category.findMany({
+    where: {
+      isActive: true,
+    },
+  });
   const contentTypes = await prisma.contentType.findMany();
   return {
     user,
@@ -123,10 +127,10 @@ export default function CreateContent() {
   }, [data, toast]);
   return (
     <div>
-      <h1 className="text-2xl font-bold">Create new content</h1>
+      <h1 className="text-2xl font-bold">Crear un nuevo contenido.</h1>
       <Form method="POST">
         <div className="grid w-full items-center gap-1.5 mt-4">
-          <Label htmlFor="title">Title</Label>
+          <Label htmlFor="title">Titulo</Label>
           <Input id="title" name="title" />
         </div>
         <div className="grid w-full items-center gap-1.5 mt-4">
@@ -178,7 +182,7 @@ export default function CreateContent() {
           <input type="hidden" name="expireDate" value={date.toISOString()} />
         </div>
         <div className="grid w-full items-center gap-1.5 mt-4">
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description">Descripción</Label>
           <Textarea id="description" name="description" />
         </div>
         <Button className="mt-3">Crear</Button>

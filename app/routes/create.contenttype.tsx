@@ -22,7 +22,7 @@ export async function action({ request }: ActionArgs) {
   })) as User;
 
   if (!user)
-    return json({ success: false, message: "User should be logged in" });
+    return json({ success: false, message: "El usuario debe iniciar sesión" });
 
   const formData = await request.formData();
   const name = formData.get("name");
@@ -35,7 +35,7 @@ export async function action({ request }: ActionArgs) {
     typeof description !== "string" ||
     typeof categoryId !== "string"
   )
-    return json({ success: false, message: "You should enter valid data" });
+    return json({ success: false, message: "Debes ingresar datos válidos" });
 
   try {
     await prisma.contentType.create({
@@ -46,7 +46,7 @@ export async function action({ request }: ActionArgs) {
       },
     });
   } catch {
-    return json({ success: false, message: "Something went wrong!" });
+    return json({ success: false, message: "Algo salió mal!" });
   }
 
   return redirect("/contenttype/list");
@@ -88,18 +88,18 @@ export default function CreateContentType() {
       <h1 className="text-2xl font-bold">Crear tipo de contenido</h1>
       <Form method="POST">
         <div className="grid w-full items-center gap-1.5 mt-4">
-          <Label htmlFor="name">Name</Label>
+          <Label htmlFor="name">Nombre</Label>
           <Input id="name" name="name" />
         </div>
         <div className="grid w-full items-center gap-1.5 mt-4">
-          <Label htmlFor="description">Description</Label>
+          <Label htmlFor="description">Descripción</Label>
           <Textarea id="description" name="description" />
         </div>
         <div className="grid w-full items-center gap-1.5 mt-4">
             <Label htmlFor="categoryId">Categoría</Label>
             <DropdownMenu title="" opciones={categorias} id="categoryId" name="categoryId"></DropdownMenu>
           </div>
-        <Button className="mt-3">Create</Button>
+        <Button className="mt-3">Crear</Button>
       </Form>
     </div>
   );

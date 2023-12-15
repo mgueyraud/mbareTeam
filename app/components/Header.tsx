@@ -44,11 +44,18 @@ export default function Header() {
               Kanban
             </Link>
             <Link
+              to="/category/list"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              Categorias
+            </Link>
+            <Link
               to="/contenttype/list"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
             >
               Tipo de contenido
             </Link>
+            
           </>}
         </div>
         {!data || !data.user ? (

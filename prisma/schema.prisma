@@ -74,6 +74,7 @@ model Category {
   id               String        @id @default(cuid())
   name             String
   type_of_contents ContentType[]
+  isActive         Boolean       @default(true)
 }
 
 model Role {
