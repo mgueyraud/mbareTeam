@@ -7,9 +7,8 @@ export const loader = async ({ request }: ActionArgs) => {
   const user = await authenticator.isAuthenticated(request);
 
   if (user) {
-    return redirect("/dashboard");
+    return redirect("/home");
   }
-
   return {
     user,
   };
