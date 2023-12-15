@@ -74,19 +74,31 @@ model Category {
 }
 
 model Role {
-  id           String         @id @default(cuid())
+  id           String            @id @default(cuid())
   name         String
   description  String
   contentId    String?
-  permissions  Permissions[]
   Collaborator Collaborator[]
-  Content      Content?       @relation(fields: [contentId], references: [id])
+  Content      Content?          @relation(fields: [contentId], references: [id])
+  permissions  RolePermissions[]
+
+  @@index([contentId], map: "Role_contentId_fkey")
 }
 
 model Permissions {
-  id     String  @id @default(cuid())
-  name   String
-  type   String
-  roleId String?
-  Role   Role?   @relation(fields: [roleId], references: [id])
+  id    String            @id @default(cuid())
+  name  String
+  type  String
+  roles RolePermissions[]
+}
+
+model RolePermissions {
+  id            String      @id @default(cuid())
+  roleId        String
+  permissionsId String
+  Permissions   Permissions @relation(fields: [permissionsId], references: [id])
+  Role          Role        @relation(fields: [roleId], references: [id])
+
+  @@index([permissionsId], map: "RolePermissions_permissionsId_fkey")
+  @@index([roleId], map: "RolePermissions_roleId_fkey")
 }
