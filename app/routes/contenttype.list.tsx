@@ -48,7 +48,7 @@ const ContentList = () => {
           <FilePlus2 className="text-gray-500" height={60} width={60} />
           <h2 className="text-xl font-bold mt-3">No content</h2>
           {/* <Button className="mt-5" asChild>
-            <Link to="/create/content">Create a new content</Link>
+            <Link to="/create/content">Crear un nuevo contenido.</Link>
           </Button> */}
         </div>
       ) : (

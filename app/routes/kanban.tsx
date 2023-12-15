@@ -119,7 +119,7 @@ export const action = async ({ request, params }: ActionArgs) => {
 
       return redirect("/kanban");
     } catch {
-      return json({ success: false, message: "Something went wrong!" });
+      return json({ success: false, message: "Algo salió mal!" });
     }
   }
 };
@@ -240,7 +240,7 @@ const Kanban = () => {
         </div>
       </div>
       <div className="border-r-4 border-primary-100" ref={revisionColumnRef}>
-        <h1 className="text-center mb-5">En revision</h1>
+        <h1 className="text-center mb-5">En revisión</h1>
         <div className="px-3">
           {contents
             .filter((c) => c.status === ESTADO_REVISION)

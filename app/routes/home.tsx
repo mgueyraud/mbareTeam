@@ -35,7 +35,7 @@ export const action = async ({ request, params }: ActionArgs) => {
     !contentId ||
     typeof contentId !== "string"
   )
-    return json({ success: false, message: "You should enter valid data" });
+    return json({ success: false, message: "Debes ingresar datos válidos" });
   try {
     let content = await prisma.content.findFirst({
       where: {
@@ -71,7 +71,7 @@ export const action = async ({ request, params }: ActionArgs) => {
 
     return redirect("/home");
   } catch (error) {
-    return json({ success: false, message: "Something went wrong!" });
+    return json({ success: false, message: "Algo salió mal!" });
   }
 };
 export const loader = async ({ request }: ActionArgs) => {

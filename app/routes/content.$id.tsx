@@ -105,7 +105,7 @@ export const action = async ({ request, params }: ActionArgs) => {
       });
       return redirect("/dashboard");
     } catch {
-      return json({ success: false, message: "Something went wrong!" });
+      return json({ success: false, message: "Algo está mal!" });
     }
   }
   switch (intention) {
@@ -145,7 +145,7 @@ export const action = async ({ request, params }: ActionArgs) => {
           contentId: contentId, // Filtrar por contentId específico
         },
       })) as Role;
-      console.log("este es el rol lector");
+      console.log("Este es el rol lector");
       console.log(lector);
       if (lector !== null && lector !== undefined) {
         try {
@@ -158,7 +158,7 @@ export const action = async ({ request, params }: ActionArgs) => {
           });
         } catch (e: any) {
           alert("hubo un problema:" + e.message);
-          return json({ success: false, message: "Something went wrong!" });
+          return json({ success: false, message: "Algo no está bien!" });
         }
       }
 
@@ -230,9 +230,9 @@ export default function Content() {
       </Form>
       <Tabs defaultValue="content" className="w-full mt-7">
         <TabsList className="grid w-fit grid-cols-3 mb-6">
-          <TabsTrigger value="content">Content</TabsTrigger>
+          <TabsTrigger value="content">Contenido</TabsTrigger>
           <TabsTrigger value="roles">Roles</TabsTrigger>
-          <TabsTrigger value="collaborators">Collaborators</TabsTrigger>
+          <TabsTrigger value="collaborators">Colaboradores</TabsTrigger>
         </TabsList>
         <TabsContent value="content" className="space-y-4">
           <div>
@@ -317,7 +317,7 @@ export default function Content() {
             />
           </Form>
           <Table>
-            <TableCaption>A list of your recent invoices.</TableCaption>
+            <TableCaption>Lista de roles por usuario.</TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[100px]">Nombre</TableHead>
