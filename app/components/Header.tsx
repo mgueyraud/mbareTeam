@@ -24,30 +24,32 @@ export default function Header() {
           >
             <img src="/images/mbareteam.png" className="h-9" alt="..."></img>
           </Link>
-          {/* <Link
-            to="/examples/dashboard"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-          >
-            Contenido
-          </Link>
           <Link
-            to="/examples/dashboard"
+            to="/home"
             className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
           >
-            Caracteristicas
+            Home
           </Link>
-          <Link
-            to="/examples/dashboard"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-          >
-            Products
-          </Link>
-          <Link
-            to="/examples/dashboard"
-            className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
-          >
-            Settings
-          </Link> */}
+          {data && data.user && <>
+            <Link
+              to="/dashboard"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              Dashboard
+            </Link>
+            <Link
+              to="/kanban"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              Kanban
+            </Link>
+            <Link
+              to="/contenttype/list"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+            >
+              Tipo de contenido
+            </Link>
+          </>}
         </div>
         {!data || !data.user ? (
           <div className="flex place-items-center space-x-4 lg:space-x-6">
