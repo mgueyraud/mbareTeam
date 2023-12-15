@@ -66,7 +66,11 @@ export const loader = async ({ request }: LoaderArgs) => {
   })) as User;
 
 
-  const categorias = await prisma.category.findMany();
+  const categorias = await prisma.category.findMany({
+    where: {
+      isActive: true,
+    }
+  });
   const contentTypes = await prisma.contentType.findMany();
   return {
     user,
