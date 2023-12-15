@@ -217,12 +217,12 @@ export default function Content() {
             </Button>
           </div>
           <div>
-            <Button name="intent" value={ESTADO_INACTIVO}>
+            <Button name="intent" variant="destructive" value={ESTADO_INACTIVO}>
               Inactivar
             </Button>
           </div>
           <div>
-            <Button name="intent" value={ESTADO_REVISION}>
+            <Button name="intent" variant="outline" value={ESTADO_REVISION}>
               En revision
             </Button>
           </div>
