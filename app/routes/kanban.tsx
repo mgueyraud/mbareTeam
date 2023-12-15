@@ -76,7 +76,11 @@ export const loader = async ({ request }: ActionArgs) => {
     },
   });
 
-  const categorias = await prisma.category.findMany();
+  const categorias = await prisma.category.findMany({
+    where: {
+      isActive: true,
+    }
+  });
   return {
     user,
     contents,

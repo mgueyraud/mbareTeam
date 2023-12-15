@@ -16,13 +16,22 @@ import { authenticator } from "~/services/auth.server";
 import { prisma } from "~/utils/db.server";
 import { Link, useLoaderData } from "@remix-run/react";
 import DropdownMenu from "@/components/ui/dropdownmenu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
 
 /**
  *
  *
  * @export
  * @param {ActionArgs} { request }
- * @return {*} 
+ * @return {*}
  */
 export async function action({ request }: ActionArgs) {
   const user = (await authenticator.isAuthenticated(request, {
@@ -36,12 +45,15 @@ export async function action({ request }: ActionArgs) {
   const title = formData.get("title");
   const description = formData.get("description");
   const contentTypeId = formData.get("contentTypeId");
+  const expireDate = formData.get("expireDate");
+
   if (
     !title ||
     !description ||
     typeof title !== "string" ||
     typeof description !== "string" ||
-    typeof contentTypeId !== "string"
+    typeof contentTypeId !== "string" ||
+    typeof expireDate !== "string"
   )
     return json({ success: false, message: "Debes ingresar datos válidos" });
 
@@ -52,6 +64,7 @@ export async function action({ request }: ActionArgs) {
         description,
         userGoogleId: user.googleId,
         contentTypeId,
+        expireDate,
       },
     });
   } catch {
@@ -65,11 +78,10 @@ export const loader = async ({ request }: LoaderArgs) => {
     failureRedirect: "/",
   })) as User;
 
-
   const categorias = await prisma.category.findMany({
     where: {
       isActive: true,
-    }
+    },
   });
   const contentTypes = await prisma.contentType.findMany();
   return {
@@ -83,17 +95,20 @@ export const loader = async ({ request }: LoaderArgs) => {
  *
  * @param {string} categoryID
  */
-async function asignarCat( categoryID: string) {
+async function asignarCat(categoryID: string) {
   const contentypes = await prisma.contentType.findMany({
-    where: { categoryId: categoryID }
+    where: { categoryId: categoryID },
   });
-};
+}
 
 export default function CreateContent() {
   const data = useActionData<typeof action>();
   const { toast } = useToast();
   const { categorias, subcategorias } = useLoaderData<typeof loader>();
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
+  const [date, setDate] = useState<Date>(new Date());
 
   useEffect(() => {
     if (data && data.success) {
@@ -121,12 +136,50 @@ export default function CreateContent() {
         <div className="grid w-full items-center gap-1.5 mt-4">
           <div>
             <Label htmlFor="title">Categoría</Label>
-            <DropdownMenu required title="" opciones={categorias} onChange={(value: string) => setSelectedCategoryId(value)} id="categoryId" name="categoryId"></DropdownMenu>
+            <DropdownMenu
+              required
+              title=""
+              opciones={categorias}
+              onChange={(value: string) => setSelectedCategoryId(value)}
+              id="categoryId"
+              name="categoryId"
+            ></DropdownMenu>
           </div>
           <div>
             <Label htmlFor="title">Tipo de contenido</Label>
-            <DropdownMenu required title="" opciones={subcategorias.filter(sc => sc.categoryId === selectedCategoryId)} id="contentTypeId" name="contentTypeId"></DropdownMenu>
+            <DropdownMenu
+              required
+              title=""
+              opciones={subcategorias.filter(
+                (sc) => sc.categoryId === selectedCategoryId
+              )}
+              id="contentTypeId"
+              name="contentTypeId"
+            ></DropdownMenu>
           </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant={"outline"}
+                className={cn(
+                  "w-[280px] justify-start text-left font-normal mt-5",
+                  !date && "text-muted-foreground"
+                )}
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {date ? format(date, "PPP") : <span>Fecha vigencia</span>}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0">
+              <Calendar
+                mode="single"
+                selected={date}
+                onSelect={setDate}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+          <input type="hidden" name="expireDate" value={date.toISOString()} />
         </div>
         <div className="grid w-full items-center gap-1.5 mt-4">
           <Label htmlFor="description">Descripción</Label>
