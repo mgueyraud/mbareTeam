@@ -68,7 +68,7 @@ export default function CreateRole() {
         <div className="grid w-full max-w-sm items-center gap-1.5">
           <Label htmlFor="rolname">Nombre del rol</Label>
           <Input id="rolname" name="rolname" required/>
-          <Label htmlFor="rolDescription">Descripción </Label>
+          <Label htmlFor="rolDescription">Descripción</Label>
           <Input id="rolDescription" name="rolDescription" required/>
         </div>
         <div className="grid w-full max-w-sm items-center gap-1.5 mt-5">
